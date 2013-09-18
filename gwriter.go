@@ -55,16 +55,15 @@ var alphabet = map[string]int{
 	"7": 31,
 }
 
-
 //Brute force
 //TODO do better
 func invertAlphabet(i int) (string, error) {
-    for key, val := range alphabet {
-        if val == i {
-            return key, nil
-        }
-    }
-    return "", errors.New("matching key not found in alphabet")
+	for key, val := range alphabet {
+		if val == i {
+			return key, nil
+		}
+	}
+	return "", errors.New("matching key not found in alphabet")
 }
 
 type Wheel struct {
@@ -124,8 +123,45 @@ func EncryptCharacter(char string) (string, error) {
 		c = interchangeBits(c, 3, 4)
 	}
 
-    encrypted_character, err := invertAlphabet(c)
+	encrypted_character, err := invertAlphabet(c)
 	return encrypted_character, err
+}
+
+func DecryptCharacter(char string) (string, error) {
+	c, ok := alphabet[char]
+	if !ok {
+		return "", errors.New("error: character not in alphabet")
+	}
+
+	if wheels[9].CurrentBit() == 1 {
+		c = interchangeBits(c, 3, 4)
+	}
+
+	if wheels[8].CurrentBit() == 1 {
+		c = interchangeBits(c, 2, 3)
+	}
+
+	if wheels[7].CurrentBit() == 1 {
+		c = interchangeBits(c, 1, 2)
+	}
+
+	if wheels[6].CurrentBit() == 1 {
+		c = interchangeBits(c, 0, 1)
+	}
+	if wheels[5].CurrentBit() == 1 {
+		c = interchangeBits(c, 0, 4)
+	}
+
+	//Order of XOR doesn't matter
+	var i uint8
+	for i = 0; i < 5; i++ {
+		current_bit := wheels[i].CurrentBit()
+		c = (c ^ (current_bit << (4 - i))) //
+	}
+
+	decrypted_character, err := invertAlphabet(c)
+	return decrypted_character, err
+
 }
 
 //interchangeBits takes a uint8 (c) with only FIVE significant bits
@@ -147,32 +183,56 @@ func interchangeBits(c int, i uint8, j uint8) int {
 	return c
 }
 
-func main() {
-	//TODO initialize Wheels
-
+func ResetWheels() {
 	wheels = make([]*Wheel, 10)
 
 	for i := 0; i < 10; i++ {
 		wheels[i] = NewWheel(wheel_values[i])
 	}
+}
+
+func main() {
+
+	//Initialize wheels
+	ResetWheels()
 
 	s, err := EncryptCharacter("A")
 	if err != nil {
 		panic(err)
 	}
 
-    log.Printf("Encrypted result is %s", s)
+	log.Printf("Encrypted result is %s", s)
 	s, err = EncryptCharacter("A")
 	if err != nil {
 		panic(err)
 	}
-    log.Printf("Encrypted result is %s", s)
+	log.Printf("Encrypted result is %s", s)
 
 	s, err = EncryptCharacter("A")
 	if err != nil {
 		panic(err)
 	}
-    log.Printf("Encrypted result is %s", s)
+	log.Printf("Encrypted result is %s", s)
+
+	ResetWheels()
+
+	s, err = DecryptCharacter("3")
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf("Decrypted result is %s", s)
+	s, err = DecryptCharacter("Z")
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("Decrypted result is %s", s)
+
+	s, err = DecryptCharacter("P")
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("Decrypted result is %s", s)
 
 	log.Print(1 ^ 1)
 }
