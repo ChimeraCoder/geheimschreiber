@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"log"
+	"strconv"
 )
 
 var wheels []*Wheel
@@ -89,19 +90,37 @@ func (w *Wheel) CurrentBit() (bit int) {
 	return
 }
 
+func EncryptString(plaintext string) (string, error) {
+	result := ""
+	for _, character := range plaintext {
+		char, _ := strconv.Unquote(strconv.QuoteRune(character))
+		encrypted, err := encryptCharacter(char)
+		if err != nil {
+			log.Printf("error occured on character %s", char)
+			return "", err
+		}
+		result += encrypted
+	}
+	return result, nil
+}
+
 //EncryptCharacter takes a single character and encrypts it with all ten wheels in Wheels
-func EncryptCharacter(char string) (string, error) {
+func encryptCharacter(char string) (string, error) {
 
 	c, ok := alphabet[char]
 	if !ok {
 		return "", errors.New("error: character not in alphabet")
 	}
 
+	log.Printf("Character %s gives integer %d", char, c)
 	var i uint8
 	for i = 0; i < 5; i++ {
 		current_bit := wheels[i].CurrentBit()
+		log.Printf("Offset is %d", wheels[i].CurrentIndex)
+		log.Printf("Current bit is %d", current_bit)
 		c = (c ^ (current_bit << (4 - i))) //
 	}
+	log.Printf("After XORing, C is %d", c)
 
 	if wheels[5].CurrentBit() == 1 {
 		c = interchangeBits(c, 0, 4)
@@ -127,7 +146,7 @@ func EncryptCharacter(char string) (string, error) {
 	return encrypted_character, err
 }
 
-func DecryptCharacter(char string) (string, error) {
+func decryptCharacter(char string) (string, error) {
 	c, ok := alphabet[char]
 	if !ok {
 		return "", errors.New("error: character not in alphabet")
@@ -183,56 +202,38 @@ func interchangeBits(c int, i uint8, j uint8) int {
 	return c
 }
 
-func ResetWheels() {
+func ResetWheels(order []int) {
 	wheels = make([]*Wheel, 10)
 
 	for i := 0; i < 10; i++ {
-		wheels[i] = NewWheel(wheel_values[i])
+		wheels[i] = NewWheel(wheel_values[order[i]])
 	}
+}
+
+func OffsetWheel(wheel_index int, offset int) {
+	wheels[wheel_index].CurrentIndex = offset
 }
 
 func main() {
 
 	//Initialize wheels
-	ResetWheels()
+	ResetWheels([]int{8, 7, 2, 4, 3, 5, 6, 1, 0, 9})
 
-	s, err := EncryptCharacter("A")
+	OffsetWheel(0, 44)
+	OffsetWheel(1, 52)
+	OffsetWheel(2, 35)
+	OffsetWheel(3, 14)
+	OffsetWheel(4, 19)
+	OffsetWheel(5, 55)
+	OffsetWheel(6, 6)
+	OffsetWheel(7, 4)
+	OffsetWheel(8, 3)
+	OffsetWheel(9, 51)
+
+	encrypted, err := EncryptString("UMUM4VEVE35KING4HENRY4IV35UMUM4VEVE")
 	if err != nil {
 		panic(err)
 	}
+	log.Print(encrypted)
 
-	log.Printf("Encrypted result is %s", s)
-	s, err = EncryptCharacter("A")
-	if err != nil {
-		panic(err)
-	}
-	log.Printf("Encrypted result is %s", s)
-
-	s, err = EncryptCharacter("A")
-	if err != nil {
-		panic(err)
-	}
-	log.Printf("Encrypted result is %s", s)
-
-	ResetWheels()
-
-	s, err = DecryptCharacter("3")
-	if err != nil {
-		panic(err)
-	}
-
-	log.Printf("Decrypted result is %s", s)
-	s, err = DecryptCharacter("Z")
-	if err != nil {
-		panic(err)
-	}
-	log.Printf("Decrypted result is %s", s)
-
-	s, err = DecryptCharacter("P")
-	if err != nil {
-		panic(err)
-	}
-	log.Printf("Decrypted result is %s", s)
-
-	log.Print(1 ^ 1)
 }
