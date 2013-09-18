@@ -55,6 +55,18 @@ var alphabet = map[string]int{
 	"7": 31,
 }
 
+
+//Brute force
+//TODO do better
+func invertAlphabet(i int) (string, error) {
+    for key, val := range alphabet {
+        if val == i {
+            return key, nil
+        }
+    }
+    return "", errors.New("matching key not found in alphabet")
+}
+
 type Wheel struct {
 	Items        []int
 	CurrentIndex int //Starts at zero
@@ -79,11 +91,11 @@ func (w *Wheel) CurrentBit() (bit int) {
 }
 
 //EncryptCharacter takes a single character and encrypts it with all ten wheels in Wheels
-func EncryptCharacter(char string) error {
+func EncryptCharacter(char string) (string, error) {
 
 	c, ok := alphabet[char]
 	if !ok {
-		return errors.New("error: character not in alphabet")
+		return "", errors.New("error: character not in alphabet")
 	}
 
 	var i uint8
@@ -112,7 +124,8 @@ func EncryptCharacter(char string) error {
 		c = interchangeBits(c, 3, 4)
 	}
 
-	return nil
+    encrypted_character, err := invertAlphabet(c)
+	return encrypted_character, err
 }
 
 //interchangeBits takes a uint8 (c) with only FIVE significant bits
@@ -143,20 +156,23 @@ func main() {
 		wheels[i] = NewWheel(wheel_values[i])
 	}
 
-	err := EncryptCharacter("A")
+	s, err := EncryptCharacter("A")
 	if err != nil {
 		panic(err)
 	}
 
-	err = EncryptCharacter("A")
+    log.Printf("Encrypted result is %s", s)
+	s, err = EncryptCharacter("A")
 	if err != nil {
 		panic(err)
 	}
+    log.Printf("Encrypted result is %s", s)
 
-	err = EncryptCharacter("A")
+	s, err = EncryptCharacter("A")
 	if err != nil {
 		panic(err)
 	}
+    log.Printf("Encrypted result is %s", s)
 
 	log.Print(1 ^ 1)
 }
