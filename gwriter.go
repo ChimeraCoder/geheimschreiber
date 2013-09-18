@@ -4,7 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
-	"regexp"
+	//"regexp"
 	"strconv"
 )
 
@@ -95,7 +95,13 @@ func (w *Wheel) CurrentBit() (bit int) {
 func EncryptString(plaintext string) (string, error) {
 	result := ""
 	for _, character := range plaintext {
+
 		char, _ := strconv.Unquote(strconv.QuoteRune(character))
+		if char == "\n" || char == "\r" {
+
+			result += char
+			continue
+		}
 		encrypted, err := encryptCharacter(char)
 		if err != nil {
 			return "", err
@@ -110,6 +116,7 @@ func encryptCharacter(char string) (string, error) {
 
 	c, ok := alphabet[char]
 	if !ok {
+		log.Printf("Cannot find character %s adf", char)
 		return "", errors.New("error: character not in alphabet")
 	}
 
@@ -232,9 +239,10 @@ func main() {
 		panic(err)
 	}
 
-	re := regexp.MustCompile(`\W`)
+	//re := regexp.MustCompile(`\W`)
 
-	ciphertext := re.ReplaceAllString(string(bts), "")
+	//ciphertext := re.ReplaceAllString(string(bts), "")
+	ciphertext := string(bts)
 
 	encrypted, err := EncryptString(ciphertext)
 	if err != nil {
@@ -242,4 +250,5 @@ func main() {
 	}
 	log.Print(encrypted)
 
+	bts, err = ioutil.ReadFile("gwriter/part_1/ciphertext.txt")
 }
