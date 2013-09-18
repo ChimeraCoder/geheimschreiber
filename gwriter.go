@@ -150,6 +150,24 @@ func encryptCharacter(char string) (string, error) {
 	return encrypted_character, err
 }
 
+func DecryptString(ciphertext string) (string, error) {
+	result := ""
+	for _, character := range ciphertext {
+
+		char, _ := strconv.Unquote(strconv.QuoteRune(character))
+		if char == "\n" || char == "\r" {
+			result += char
+			continue
+		}
+		decrypted, err := decryptCharacter(char)
+		if err != nil {
+			return "", err
+		}
+		result += decrypted
+	}
+	return result, nil
+}
+
 func decryptCharacter(char string) (string, error) {
 	c, ok := alphabet[char]
 	if !ok {
@@ -241,14 +259,38 @@ func main() {
 
 	//re := regexp.MustCompile(`\W`)
 
-	//ciphertext := re.ReplaceAllString(string(bts), "")
-	ciphertext := string(bts)
+	plaintext := string(bts)
 
-	encrypted, err := EncryptString(ciphertext)
+	encrypted, err := EncryptString(plaintext)
 	if err != nil {
 		panic(err)
 	}
 	log.Print(encrypted)
 
 	bts, err = ioutil.ReadFile("gwriter/part_1/ciphertext.txt")
+
+	//encrypted_text_matches := string(bts) == encrypted
+
+	ResetWheels([]int{8, 7, 2, 4, 3, 5, 6, 1, 0, 9})
+
+	OffsetWheel(0, 44)
+	OffsetWheel(1, 52)
+	OffsetWheel(2, 35)
+	OffsetWheel(3, 14)
+	OffsetWheel(4, 19)
+	OffsetWheel(5, 55)
+	OffsetWheel(6, 6)
+	OffsetWheel(7, 4)
+	OffsetWheel(8, 3)
+	OffsetWheel(9, 51)
+
+	decrypted, err := DecryptString(string(bts))
+	if err != nil {
+		print(err)
+	}
+
+	log.Print(decrypted)
+	decrypted_text_matches := plaintext == decrypted
+	log.Print(decrypted_text_matches)
+
 }
