@@ -92,6 +92,56 @@ func EncryptCharacter(char string) error {
 		c = (c ^ wheels[i].CurrentBit()) << (4 - i) //
 	}
 
+    
+    if wheels[5].CurrentBit() == 1 {
+        //Interchange c0 and c4
+
+        //Bitwise AND with "10000" tells us if c0 is 1
+
+        //c0_tmp is 16 if c0 is 1 (if 16ths place is 1)
+        
+        c0_tmp := c & (1 << 4)
+        c4_tmp := c & (1 << 0)
+
+
+
+        /**
+        10101 original
+     &  01111 mask       (c4_tmp << 4)
+        00101
+
+        00000 new value
+     &  10000 mask
+        00000
+        **/
+
+        //Set c0 to be the OLD value of c4
+        c = c &^ (1 << 4)
+        c = c | (c4_tmp << 4)
+
+        //Set c4 to be the OLD value of c0
+        c = c &^ (1 << 0)
+        c = c | (c0_tmp >> 4)
+    }
+
+    if wheels[5].CurrentBit() == 1 {
+
+    }
+
+    if wheels[5].CurrentBit() == 1 {
+        
+    }
+
+    if wheels[5].CurrentBit() == 1 {
+        
+    }
+
+    if wheels[5].CurrentBit() == 1 {
+        
+    }
+
+
+
 	return nil
 }
 
