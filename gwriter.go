@@ -103,18 +103,6 @@ func EncryptCharacter(char string) error {
         c0_tmp := c & (1 << 4)
         c4_tmp := c & (1 << 0)
 
-
-
-        /**
-        10101 original
-     &  01111 mask       (c4_tmp << 4)
-        00101
-
-        00000 new value
-     &  10000 mask
-        00000
-        **/
-
         //Set c0 to be the OLD value of c4
         c = c &^ (1 << 4)
         c = c | (c4_tmp << 4)
@@ -140,9 +128,28 @@ func EncryptCharacter(char string) error {
         
     }
 
-
-
 	return nil
+}
+
+//interchangeBits takes a uint8 (c) with only FIVE significant bits
+//and interchanges the ith and jth bit
+//i must be less than j
+func interchangeBits(c uint8, i uint8, j uint8) uint8 {
+
+        //Get the ith digit of c
+        ci_tmp := c & (16 >> i)
+        //Get the jth digit of c
+        cj_tmp := c & (16 >> j)
+
+
+        //Set ci to be the OLD value of cj
+        c = c &^ (16 >>  i)
+        c = c | (cj_tmp << (j-i))
+
+        //Set cj to be the OLD value of ci
+        c = c &^ (16 >> j)
+        c = c | (ci_tmp >> (j-i))
+        return c
 }
 
 func main() {
