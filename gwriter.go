@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"io/ioutil"
 	"log"
+	"regexp"
 	"strconv"
 )
 
@@ -96,7 +98,6 @@ func EncryptString(plaintext string) (string, error) {
 		char, _ := strconv.Unquote(strconv.QuoteRune(character))
 		encrypted, err := encryptCharacter(char)
 		if err != nil {
-			log.Printf("error occured on character %s", char)
 			return "", err
 		}
 		result += encrypted
@@ -112,15 +113,11 @@ func encryptCharacter(char string) (string, error) {
 		return "", errors.New("error: character not in alphabet")
 	}
 
-	log.Printf("Character %s gives integer %d", char, c)
 	var i uint8
 	for i = 0; i < 5; i++ {
 		current_bit := wheels[i].CurrentBit()
-		log.Printf("Offset is %d", wheels[i].CurrentIndex)
-		log.Printf("Current bit is %d", current_bit)
 		c = (c ^ (current_bit << (4 - i))) //
 	}
-	log.Printf("After XORing, C is %d", c)
 
 	if wheels[5].CurrentBit() == 1 {
 		c = interchangeBits(c, 0, 4)
@@ -230,7 +227,16 @@ func main() {
 	OffsetWheel(8, 3)
 	OffsetWheel(9, 51)
 
-	encrypted, err := EncryptString("UMUM4VEVE35KING4HENRY4IV35UMUM4VEVE")
+	bts, err := ioutil.ReadFile("gwriter/part_1/plaintext.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	re := regexp.MustCompile(`\W`)
+
+	ciphertext := re.ReplaceAllString(string(bts), "")
+
+	encrypted, err := EncryptString(ciphertext)
 	if err != nil {
 		panic(err)
 	}
