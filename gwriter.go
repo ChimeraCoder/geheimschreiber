@@ -85,48 +85,33 @@ func EncryptCharacter(char string) error {
 	if !ok {
 		return errors.New("error: character not in alphabet")
 	}
-	return nil
 
 	var i uint8
 	for i = 0; i < 5; i++ {
 		c = (c ^ wheels[i].CurrentBit()) << (4 - i) //
 	}
 
-    
-    if wheels[5].CurrentBit() == 1 {
-        //Interchange c0 and c4
+	if wheels[5].CurrentBit() == 1 {
+		c = interchangeBits(c, 0, 4)
+	}
 
-        //Bitwise AND with "10000" tells us if c0 is 1
+	if wheels[6].CurrentBit() == 1 {
+		c = interchangeBits(c, 0, 1)
+	}
 
-        //c0_tmp is 16 if c0 is 1 (if 16ths place is 1)
-        
-        c0_tmp := c & (1 << 4)
-        c4_tmp := c & (1 << 0)
+	if wheels[7].CurrentBit() == 1 {
+		c = interchangeBits(c, 1, 2)
+	}
 
-        //Set c0 to be the OLD value of c4
-        c = c &^ (1 << 4)
-        c = c | (c4_tmp << 4)
+	if wheels[8].CurrentBit() == 1 {
+		c = interchangeBits(c, 2, 3)
+	}
 
-        //Set c4 to be the OLD value of c0
-        c = c &^ (1 << 0)
-        c = c | (c0_tmp >> 4)
-    }
+	if wheels[9].CurrentBit() == 1 {
+		c = interchangeBits(c, 3, 4)
+	}
 
-    if wheels[5].CurrentBit() == 1 {
-
-    }
-
-    if wheels[5].CurrentBit() == 1 {
-        
-    }
-
-    if wheels[5].CurrentBit() == 1 {
-        
-    }
-
-    if wheels[5].CurrentBit() == 1 {
-        
-    }
+	log.Printf("C is %d", c)
 
 	return nil
 }
@@ -134,22 +119,21 @@ func EncryptCharacter(char string) error {
 //interchangeBits takes a uint8 (c) with only FIVE significant bits
 //and interchanges the ith and jth bit
 //i must be less than j
-func interchangeBits(c uint8, i uint8, j uint8) uint8 {
+func interchangeBits(c int, i uint8, j uint8) int {
 
-        //Get the ith digit of c
-        ci_tmp := c & (16 >> i)
-        //Get the jth digit of c
-        cj_tmp := c & (16 >> j)
+	//Get the ith digit of c
+	ci_tmp := c & (16 >> i)
+	//Get the jth digit of c
+	cj_tmp := c & (16 >> j)
 
+	//Set ci to be the OLD value of cj
+	c = c &^ (16 >> i)
+	c = c | (cj_tmp << (j - i))
 
-        //Set ci to be the OLD value of cj
-        c = c &^ (16 >>  i)
-        c = c | (cj_tmp << (j-i))
-
-        //Set cj to be the OLD value of ci
-        c = c &^ (16 >> j)
-        c = c | (ci_tmp >> (j-i))
-        return c
+	//Set cj to be the OLD value of ci
+	c = c &^ (16 >> j)
+	c = c | (ci_tmp >> (j - i))
+	return c
 }
 
 func main() {
@@ -157,19 +141,20 @@ func main() {
 
 	wheels = make([]*Wheel, 10)
 
-    for i := 0; i < 10; i++{
-        wheels[i] = NewWheel(wheel_values[i])
-    }
-
+	for i := 0; i < 10; i++ {
+		wheels[i] = NewWheel(wheel_values[i])
+	}
 
 	for j := 0; j < 10; j++ {
 		log.Print(wheels[0].CurrentBit())
 	}
 
-    for _, wheel := range wheels {
-        log.Print(wheel.Items)
-        
-    }
+	for _, wheel := range wheels {
+		log.Print(wheel.Items)
+
+	}
+
+	EncryptCharacter("A")
 
 	log.Print(1 ^ 1)
 }
