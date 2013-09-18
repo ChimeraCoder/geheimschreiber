@@ -88,7 +88,8 @@ func EncryptCharacter(char string) error {
 
 	var i uint8
 	for i = 0; i < 5; i++ {
-		c = (c ^ wheels[i].CurrentBit()) << (4 - i) //
+		current_bit := wheels[i].CurrentBit()
+		c = (c ^ (current_bit << (4 - i))) //
 	}
 
 	if wheels[5].CurrentBit() == 1 {
@@ -111,8 +112,6 @@ func EncryptCharacter(char string) error {
 		c = interchangeBits(c, 3, 4)
 	}
 
-	log.Printf("C is %d", c)
-
 	return nil
 }
 
@@ -126,7 +125,6 @@ func interchangeBits(c int, i uint8, j uint8) int {
 	//Get the jth digit of c
 	cj_tmp := c & (16 >> j)
 
-	//Set ci to be the OLD value of cj
 	c = c &^ (16 >> i)
 	c = c | (cj_tmp << (j - i))
 
@@ -145,16 +143,20 @@ func main() {
 		wheels[i] = NewWheel(wheel_values[i])
 	}
 
-	for j := 0; j < 10; j++ {
-		log.Print(wheels[0].CurrentBit())
+	err := EncryptCharacter("A")
+	if err != nil {
+		panic(err)
 	}
 
-	for _, wheel := range wheels {
-		log.Print(wheel.Items)
-
+	err = EncryptCharacter("A")
+	if err != nil {
+		panic(err)
 	}
 
-	EncryptCharacter("A")
+	err = EncryptCharacter("A")
+	if err != nil {
+		panic(err)
+	}
 
 	log.Print(1 ^ 1)
 }
