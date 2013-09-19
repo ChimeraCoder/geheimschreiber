@@ -224,14 +224,6 @@ func interchangeBits(c int, i uint8, j uint8) int {
 	return c
 }
 
-func ResetWheels(order []int) {
-	wheels = make([]*Wheel, 10)
-
-	for i := 0; i < 10; i++ {
-		wheels[i] = NewWheel(wheel_values[order[i]])
-	}
-}
-
 func OffsetWheel(wheel_index int, offset int) {
 	wheels[wheel_index].CurrentIndex = offset
 }
