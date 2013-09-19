@@ -230,57 +230,49 @@ func OffsetWheel(wheel_index int, offset int) {
 
 func main() {
 
+	log.Print(2.0 << 2)
+	// Initialize wheel slice to empty pairs
+
+	for i := 0; i < 10; i++ {
+
+		tmp_wheel := [][]float64{}
+
+		for j := 0; j < WHEEL_SIZES[i]; j++ {
+
+			prob_pair := make([]float64, 2)
+			tmp_wheel = append(tmp_wheel, prob_pair)
+		}
+
+		spokeWeights = append(spokeWeights, tmp_wheel)
+	}
+
+	// Iterate across plaintext. For each character:
+	// For each bit c0-c4:
+	// Examine all possible destination bits for ci
+	// Add p to implied element of appropriate spoke's pair
+
+	// Examine all observed spoke 0-1 pairs. For all that pass a threshold, declare it 0 or 1.
+	// Abort if any spoke fails this threshold.
+
 	//Initialize wheels
-	ResetWheels([]int{8, 7, 2, 4, 3, 5, 6, 1, 0, 9})
 
-	OffsetWheel(0, 44)
-	OffsetWheel(1, 52)
-	OffsetWheel(2, 35)
-	OffsetWheel(3, 14)
-	OffsetWheel(4, 19)
-	OffsetWheel(5, 55)
-	OffsetWheel(6, 6)
-	OffsetWheel(7, 4)
-	OffsetWheel(8, 3)
-	OffsetWheel(9, 51)
-
-	bts, err := ioutil.ReadFile("gwriter/part_1/plaintext.txt")
+	bts, err := ioutil.ReadFile("gwriter/part_2/plaintext.txt")
 	if err != nil {
 		panic(err)
 	}
-
-	//re := regexp.MustCompile(`\W`)
 
 	plaintext := string(bts)
 
-	encrypted, err := EncryptString(plaintext)
-	if err != nil {
-		panic(err)
-	}
-	log.Print(encrypted)
-
-	bts, err = ioutil.ReadFile("gwriter/part_1/ciphertext.txt")
-
-	//encrypted_text_matches := string(bts) == encrypted
-
-	ResetWheels([]int{8, 7, 2, 4, 3, 5, 6, 1, 0, 9})
-
-	OffsetWheel(0, 44)
-	OffsetWheel(1, 52)
-	OffsetWheel(2, 35)
-	OffsetWheel(3, 14)
-	OffsetWheel(4, 19)
-	OffsetWheel(5, 55)
-	OffsetWheel(6, 6)
-	OffsetWheel(7, 4)
-	OffsetWheel(8, 3)
-	OffsetWheel(9, 51)
-
-	decrypted, err := DecryptString(string(bts))
+	bts, err = ioutil.ReadFile("gwriter/part_2/ciphertext.txt")
 	if err != nil {
 		print(err)
 	}
 
+	//ciphertext := string(bts)
+
+	//encrypted_text_matches := string(bts) == encrypted
+
+	decrypted, err := DecryptString(string(bts))
 	log.Print(decrypted)
 	decrypted_text_matches := plaintext == decrypted
 	log.Print(decrypted_text_matches)
