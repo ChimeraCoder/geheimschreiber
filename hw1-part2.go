@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	//"regexp"
-	"math"
 	"strconv"
 )
 
@@ -13,15 +12,15 @@ var wheels []*Wheel
 
 var spokeWeights = [][][]float64{}
 
-var WHEEL_SIZES = []int{47, 53, 59, 61, 64, 65, 67, 69, 71, 73}
+var WHEEL_SIZES = []int{47,53,59,61,64,65,67,69,71,73}
 
 // TRANSPOSE_PROBS[i][j] is prob ci ends up in j'th bit
 var TRANSPOSE_PROBS = [][]float64{
-	[]float64{0.25, 0.125, 0.0625, 0.25 + 0.03125, 0.25 + 0.03125},
-	[]float64{0.5, 0.25, 0.125, 0.0625, 0.0625},
-	[]float64{0, 0.5, 0.25, 0.125, 0.125},
-	[]float64{0, 0, 0.5, 0.25, 0.25},
-	[]float64{0.25, 0.125, 0.0625, 0.03125 + 0.25, 0.03125 + 0.025}}
+    []float64{0.25,0.125,0.0625,0.25+0.03125,0.25+0.03125},
+    []float64{0.5,0.25,0.125,0.0625,0.0625},
+    []float64{0,0.5,0.25,0.125,0.125},
+    []float64{0,0,0.5,0.25,0.25},
+    []float64{0.25,0.125,0.0625,0.03125+0.25,0.03125+0.025}}
 
 var alphabet = map[string]int{
 	"2": 0,
@@ -205,6 +204,10 @@ func decryptCharacter(char string) (string, error) {
 
 }
 
+func getNthBit(i int, n int) int {
+    return (i & (1 << uint(n))) >> uint(n)
+}
+
 //interchangeBits takes a uint8 (c) with only FIVE significant bits
 //and interchanges the ith and jth bit
 //i must be less than j
@@ -230,51 +233,76 @@ func OffsetWheel(wheel_index int, offset int) {
 
 func main() {
 
-	log.Print(2.0 << 2)
 	// Initialize wheel slice to empty pairs
+    
 
-	for i := 0; i < 10; i++ {
+    for i := 0; i < 10; i++ {
 
-		tmp_wheel := [][]float64{}
+        tmp_wheel := [][]float64{}
+        
+        for j := 0; j < WHEEL_SIZES[i]; j++ {
+            
+            prob_pair := make([]float64, 2)
+            tmp_wheel = append(tmp_wheel, prob_pair)
+        }
 
-		for j := 0; j < WHEEL_SIZES[i]; j++ {
+        spokeWeights = append(spokeWeights, tmp_wheel)
+    }
 
-			prob_pair := make([]float64, 2)
-			tmp_wheel = append(tmp_wheel, prob_pair)
-		}
-
-		spokeWeights = append(spokeWeights, tmp_wheel)
-	}
-
-	// Iterate across plaintext. For each character:
-	// For each bit c0-c4:
-	// Examine all possible destination bits for ci
-	// Add p to implied element of appropriate spoke's pair
-
-	// Examine all observed spoke 0-1 pairs. For all that pass a threshold, declare it 0 or 1.
-	// Abort if any spoke fails this threshold.
-
-	//Initialize wheels
+    // Iterate across plaintext. For each character:
+        // For each bit c0-c4:
+            // Examine all possible destination bits for ci
+            // Add p to implied element of appropriate spoke's pair
+    
+    // Examine all observed spoke 0-1 pairs. For all that pass a threshold, declare it 0 or 1.
+    // Abort if any spoke fails this threshold.
+    
+    //Initialize wheels
 
 	bts, err := ioutil.ReadFile("gwriter/part_2/plaintext.txt")
 	if err != nil {
 		panic(err)
 	}
 
-	plaintext := string(bts)
+    plaintext := string(bts)
+    //plaintext := "A"
 
 	bts, err = ioutil.ReadFile("gwriter/part_2/ciphertext.txt")
 	if err != nil {
 		print(err)
 	}
 
-	//ciphertext := string(bts)
+    ciphertext := string(bts)
+    //ciphertext = "Q"
 
+    for index, plainRune := range plaintext {
+        plainChar, _ := strconv.Unquote(strconv.QuoteRune(plainRune))
+        plainInt := alphabet[plainChar]
+
+        cipherRune := rune(ciphertext[index])
+        cipherChar, _ := strconv.Unquote(strconv.QuoteRune(cipherRune))
+        cipherInt := alphabet[cipherChar]
+
+        // For all 5 possible source indexes of a given bit
+        // in the plaintext, check all 5 possible (some with
+        // 0 prob.) destinations and save a weight corresponding
+        // to the implied b0-b4 bit
+        for sourceIndex := 0; sourceIndex < 5; sourceIndex++ {
+            for destIndex := 0; destIndex < 5; destIndex++ {
+                // bit xor is 1 <=> cipherwheel bit was also 1;
+                // increment appropriate spokeWeight
+                wheelOffset := index % WHEEL_SIZES[sourceIndex]
+                nthBit := getNthBit(plainInt, sourceIndex) ^ getNthBit(cipherInt, destIndex)
+                spokeWeights[sourceIndex][wheelOffset][nthBit] += TRANSPOSE_PROBS[sourceIndex][destIndex]
+                //log.Printf("sourceIndex:\t%d\tdestIndex:\t%d\tnthBit:\t%d", sourceIndex, destIndex, nthBit)
+            }
+        }
+    }
+    
+    for _, bob := range spokeWeights[0] {
+        log.Printf("%f\t%f\t%f", bob[0], bob[1], bob[0] + bob[1])
+    }
+    
 	//encrypted_text_matches := string(bts) == encrypted
-
-	decrypted, err := DecryptString(string(bts))
-	log.Print(decrypted)
-	decrypted_text_matches := plaintext == decrypted
-	log.Print(decrypted_text_matches)
 
 }
