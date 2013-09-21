@@ -480,20 +480,6 @@ func main() {
 				if bitP != nil {
 					bit := *bitP
 
-					/**
-					  if(index % 69 == 141 - 2*69){
-					      log.Printf("Values:")
-					      log.Printf("plainInt is %d", plainInt)
-					      log.Printf("cipherInt is %d", cipherInt)
-					      log.Printf("index is %d", index)
-					      log.Printf("xoredValue is %d", xoredValue)
-					      log.Printf("i is %d", i)
-					      log.Printf("bit is %d", bit)
-					      log.Printf("sourceIndex is %d", sourceIndex)
-					      log.Printf("destIndex is %d", destIndex)
-					      log.Print("----")
-					  }*/
-
 					//Check that we are never overwriting an existing known value with a (conflicting) known value; this should never be possible
 					if learnedWheels[5+i][index%WHEEL_SIZES[5+i]] != nil && *learnedWheels[5+i][index%WHEEL_SIZES[5+i]] != bit {
 						panic(fmt.Errorf("error: inconsistent transposition bit saved at %d for wheel %d", index, 5+i))
