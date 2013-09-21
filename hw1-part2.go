@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"regexp"
-	"strconv"
 )
 
 var wheels []*Wheel
@@ -96,7 +95,7 @@ func EncryptString(plaintext string) (string, error) {
 	result := ""
 	for _, character := range plaintext {
 
-		char, _ := strconv.Unquote(strconv.QuoteRune(character))
+		char := string(character)
 		if char == "\n" || char == "\r" {
 
 			result += char
@@ -154,7 +153,7 @@ func DecryptString(ciphertext string) (string, error) {
 	result := ""
 	for _, character := range ciphertext {
 
-		char, _ := strconv.Unquote(strconv.QuoteRune(character))
+		char := string(character)
 		if char == "\n" || char == "\r" {
 			result += char
 			continue
@@ -280,18 +279,12 @@ func main() {
 	// If all b0-b4 learned:
 	// Else:
 	for index, plainRune := range plaintext {
-		plainChar, err := strconv.Unquote(strconv.QuoteRune(plainRune))
-		if err != nil {
-			panic(err)
-		}
+		plainChar := string(plainRune)
 
 		plainInt := alphabet[plainChar]
 
 		cipherRune := rune(ciphertext[index])
-		cipherChar, err := strconv.Unquote(strconv.QuoteRune(cipherRune))
-		if err != nil {
-			panic(err)
-		}
+		cipherChar := string(cipherRune)
 
 		cipherInt := alphabet[cipherChar]
 
