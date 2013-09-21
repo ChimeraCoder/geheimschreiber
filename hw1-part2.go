@@ -10,9 +10,108 @@ import (
 
 var wheels []*Wheel
 
-var spokeWeights = [][]*int{}
+var learnedWheels = [][]*int{}
 
 var WHEEL_SIZES = []int{47, 53, 59, 61, 64, 65, 67, 69, 71, 73}
+
+var interestingCharacters = map[string]struct{}{"T": {},
+	"3": {},
+	"4": {},
+	"5": {},
+	"E": {},
+	"K": {},
+	"Q": {},
+	"6": {},
+	"X": {},
+	"V": {}}
+
+//FindUniqueBitIndex takes an integer which must be a permutation of "00001" or "11110"
+//and returns the index (counting from the left) of the unique bit
+func FindUniqueBitIndex(i int) (index int, err error) {
+	switch i {
+	case 1:
+		index = 4
+		return
+	case 2:
+		index = 3
+		return
+	case 4:
+		index = 2
+		return
+	case 8:
+		index = 1
+		return
+	case 16:
+		index = 0
+		return
+	case 30:
+		index = 4
+		return
+	case 29:
+		index = 3
+		return
+	case 27:
+		index = 2
+		return
+	case 23:
+		index = 1
+		return
+	case 15:
+		index = 0
+		return
+	}
+	return -1, fmt.Errorf("error: FindUniqueBitIndex called with an invalid integer input")
+}
+
+//We need these only because we cannot take the address of an integer literal
+var ZERO = 0
+var ONE = 1
+
+var TRANSPOSITION_PATTERN = [][][]*int{
+	[][]*int{
+		[]*int{&ZERO, &ZERO, nil, nil, nil},
+		[]*int{&ZERO, &ONE, &ZERO, nil, nil},
+		[]*int{&ZERO, &ONE, &ONE, &ZERO, nil},
+		[]*int{nil, nil, nil, nil, nil},
+		[]*int{nil, nil, nil, nil, nil},
+	},
+
+	[][]*int{
+		[]*int{nil, &ONE, nil, nil, nil},
+		[]*int{nil, &ZERO, &ZERO, nil, nil},
+		[]*int{nil, &ZERO, &ONE, &ZERO, nil},
+		[]*int{nil, &ZERO, &ONE, &ONE, &ZERO},
+		[]*int{nil, &ZERO, &ONE, &ONE, &ONE},
+	},
+	[][]*int{
+		[]*int{nil, nil, nil, nil, nil},
+		[]*int{nil, nil, &ONE, nil, nil},
+		[]*int{nil, nil, &ZERO, &ZERO, nil},
+		[]*int{nil, nil, &ZERO, &ONE, &ZERO},
+		[]*int{nil, nil, &ZERO, &ONE, &ONE},
+	},
+	[][]*int{
+		[]*int{nil, nil, nil, nil, nil},
+		[]*int{nil, nil, nil, nil, nil},
+		[]*int{nil, nil, nil, &ONE, nil},
+		[]*int{nil, nil, nil, &ZERO, &ZERO},
+		[]*int{nil, nil, nil, &ZERO, &ONE},
+	},
+	[][]*int{
+		[]*int{&ONE, &ZERO, nil, nil, nil},
+		[]*int{&ONE, &ONE, &ZERO, nil, nil},
+		[]*int{&ONE, &ONE, &ONE, &ZERO, nil},
+		[]*int{nil, nil, nil, nil, nil},
+		[]*int{nil, nil, nil, nil, nil},
+	},
+}
+
+//inferTransposeBits takes a source integer and a destination integer corresponding to
+//(plaintext XORed with wheels 0-4) and ciphertext, respectively
+//It returns what we know about the transpose wheels (wheels 5-9)
+func inferTransposeBits(source, dest int) []*int {
+	return TRANSPOSITION_PATTERN[source][dest]
+}
 
 // TRANSPOSE_PROBS[i][j] is prob ci ends up in j'th bit
 var TRANSPOSE_PROBS = [][]float64{
@@ -85,10 +184,35 @@ func NewWheel(items []int) (w *Wheel) {
 
 }
 
+//CurrentBit gets the current bit on the given wheel AND ticks the wheel forward to the next value
 func (w *Wheel) CurrentBit() (bit int) {
 	bit = w.Items[w.CurrentIndex]
 	w.CurrentIndex = (w.CurrentIndex + 1) % w.MaxSize
 	return
+}
+
+//Tick increments the current wheel (but ignore the actual value read from the wheel)
+func (w *Wheel) Tick() {
+	w.CurrentBit()
+}
+
+//TickAll takes a slice of wheels and calls Tick() on all of them
+func TickAll(ws []*Wheel) {
+	for _, w := range ws {
+		w.Tick()
+	}
+}
+
+//xorCurrentCharacter takes an integer representation of a character
+//and XORs it with the current bit on each of wheel b0 through b4
+//This assumes that "wheels" is a valid array of wheels of length <= 5
+func xorCurrentCharacter(input int) int {
+	//Iterate over each of the wheels (from the left)
+	for i := 0; i < 5; i++ {
+		currentBit := wheels[i].CurrentBit()
+		input = input ^ currentBit<<(4-uint(i))
+	}
+	return input
 }
 
 func EncryptString(plaintext string) (string, error) {
@@ -241,7 +365,7 @@ func main() {
 
 		tmp_wheel := make([]*int, WHEEL_SIZES[i])
 
-		spokeWeights = append(spokeWeights, tmp_wheel)
+		learnedWheels = append(learnedWheels, tmp_wheel)
 	}
 
 	// Iterate across plaintext. For each character:
@@ -299,25 +423,101 @@ func main() {
 			for i := 0; i < 5; i++ {
 				bi := getNthBit(mask, 4-i)
 
-				if spokeWeights[i][index%WHEEL_SIZES[i]] != nil && *spokeWeights[i][index%WHEEL_SIZES[i]] != bi {
+				if learnedWheels[i][index%WHEEL_SIZES[i]] != nil && *learnedWheels[i][index%WHEEL_SIZES[i]] != bi {
 					panic(fmt.Errorf("error: inconsistent XOR bit saved at %d for wheel %d", index, i))
 				}
 
-				spokeWeights[i][index%WHEEL_SIZES[i]] = &bi
+				learnedWheels[i][index%WHEEL_SIZES[i]] = &bi
 			}
 
 		}
 	}
 
-	for i := 0; i < 5; i++ {
-		for j := 0; j < WHEEL_SIZES[i]; j++ {
-			if spokeWeights[i][j] != nil {
-				fmt.Printf("%d ", *spokeWeights[i][j])
+	//TODO check that all bit values are now known
+
+	//Convert learnedWheels to Wheel structs
+	for _, wheel := range learnedWheels[:5] {
+		items := make([]int, len(wheel))
+		for i, _ := range wheel {
+			items[i] = *wheel[i]
+		}
+		w := NewWheel(items)
+		wheels = append(wheels, w)
+	}
+
+	//Iterate over the ciphertext. If the ciphercharacter is one of T,3,4,5,E,K,Q,6,X,V,
+	//we XOR the plainInt with the current state of the XOR wheels (which is known)
+	//This gives a permutation of "00001" or "11110"
+	//The current cipherInt must also be a (potentially different) permutation of the same two bit sequences
+	//Based on where the unique bit (the unique 0 or unique 1) started and ended, we can deduce at least 2 transposed bits
+	for index, plainRune := range plaintext {
+		plainChar := string(plainRune)
+
+		plainInt := alphabet[plainChar]
+
+		cipherRune := rune(ciphertext[index])
+		cipherChar := string(cipherRune)
+
+		cipherInt := alphabet[cipherChar]
+
+		//Check if the cipherCharacter is one of the characters we care about
+		if _, present := interestingCharacters[cipherChar]; present {
+			//XOR the plainInt with the current state of the XOR wheels
+
+			xoredValue := xorCurrentCharacter(plainInt)
+			sourceIndex, err := FindUniqueBitIndex(xoredValue)
+			if err != nil {
+				panic(err)
+			}
+
+			destIndex, err := FindUniqueBitIndex(cipherInt)
+			if err != nil {
+				panic(err)
+			}
+
+			inferredBits := inferTransposeBits(sourceIndex, destIndex)
+			for i, bitP := range inferredBits {
+				if bitP != nil {
+					bit := *bitP
+
+					/**
+					  if(index % 69 == 141 - 2*69){
+					      log.Printf("Values:")
+					      log.Printf("plainInt is %d", plainInt)
+					      log.Printf("cipherInt is %d", cipherInt)
+					      log.Printf("index is %d", index)
+					      log.Printf("xoredValue is %d", xoredValue)
+					      log.Printf("i is %d", i)
+					      log.Printf("bit is %d", bit)
+					      log.Printf("sourceIndex is %d", sourceIndex)
+					      log.Printf("destIndex is %d", destIndex)
+					      log.Print("----")
+					  }*/
+
+					//Check that we are never overwriting an existing known value with a (conflicting) known value; this should never be possible
+					if learnedWheels[5+i][index%WHEEL_SIZES[5+i]] != nil && *learnedWheels[5+i][index%WHEEL_SIZES[5+i]] != bit {
+						panic(fmt.Errorf("error: inconsistent transposition bit saved at %d for wheel %d", index, 5+i))
+					}
+
+					//Store the bit in the collection of learned wheels
+					learnedWheels[5+i][index%WHEEL_SIZES[5+i]] = &bit
+				}
+			}
+
+		} else {
+			TickAll(wheels)
+		}
+	}
+
+	for _, wheel := range learnedWheels[5:10] {
+		for _, w := range wheel {
+			if w == nil {
+				fmt.Print(" <nil> ")
 			} else {
-				fmt.Printf("X")
+				fmt.Printf(" %d ", *w)
 			}
 		}
-		fmt.Print("\n")
-	}
+		fmt.Printf("\n")
 
+	}
 }
