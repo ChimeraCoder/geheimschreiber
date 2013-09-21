@@ -10,7 +10,7 @@ import (
 
 var wheels []*Wheel
 
-var spokeWeights = [][][]float64{}
+var spokeWeights = [][]*int{}
 
 var WHEEL_SIZES = []int{47,53,59,61,64,65,67,69,71,73}
 
@@ -239,13 +239,8 @@ func main() {
 
     for i := 0; i < 10; i++ {
 
-        tmp_wheel := [][]float64{}
+        tmp_wheel := make([]*int, WHEEL_SIZES[i])
         
-        for j := 0; j < WHEEL_SIZES[i]; j++ {
-            
-            prob_pair := make([]float64, 2)
-            tmp_wheel = append(tmp_wheel, prob_pair)
-        }
 
         spokeWeights = append(spokeWeights, tmp_wheel)
     }
@@ -276,6 +271,11 @@ func main() {
     ciphertext := string(bts)
     //ciphertext = "M"
 
+    //Iterate over plaintext and ciphertext in lockstep
+    // For each cipherchar 2 or 7 encountered:
+        // Learn b0-b4 and save to appropriate slot on each wheel
+    // If all b0-b4 learned:
+    // Else:
     for index, plainRune := range plaintext {
         plainChar, _ := strconv.Unquote(strconv.QuoteRune(plainRune))
         plainInt := alphabet[plainChar]
@@ -283,28 +283,15 @@ func main() {
         cipherRune := rune(ciphertext[index])
         cipherChar, _ := strconv.Unquote(strconv.QuoteRune(cipherRune))
         cipherInt := alphabet[cipherChar]
+       
 
-        // For all 5 possible source indexes of a given bit
-        // in the plaintext, check all 5 possible (some with
-        // 0 prob.) destinations and save a weight corresponding
-        // to the implied b0-b4 bit
-        for sourceIndex := 0; sourceIndex < 5; sourceIndex++ {
-            for destIndex := 0; destIndex < 5; destIndex++ {
-                // bit xor is 1 <=> cipherwheel bit was also 1;
-                // increment appropriate spokeWeight
-                wheelOffset := index % WHEEL_SIZES[sourceIndex]
-                nthBit := getNthBit(plainInt, 4-sourceIndex) ^ getNthBit(cipherInt, 4-destIndex)
-                spokeWeights[sourceIndex][wheelOffset][nthBit] += TRANSPOSE_PROBS[sourceIndex][destIndex]
-                if sourceIndex == 3 {
-                    //log.Printf("sourceIndex:\t%d\tdestIndex:\t%d\tnthBit:\t%d", sourceIndex, destIndex, nthBit)
-                }
-            }
-        }
+
+
+
+        //Delete this once variables are used
+        log.Print(plainInt, cipherInt)
     }
     
-    for _, bob := range spokeWeights[3] {
-        log.Printf("%f\t%f\t%f", bob[0], bob[1], bob[0] + bob[1])
-    }
     
 	//encrypted_text_matches := string(bts) == encrypted
 
