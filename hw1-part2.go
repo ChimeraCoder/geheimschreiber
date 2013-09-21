@@ -205,6 +205,7 @@ func decryptCharacter(char string) (string, error) {
 }
 
 func getNthBit(i int, n int) int {
+    //log.Printf("i:\t%d\tn:\t%d\tret:\t%d", i, n, (i & (1 << uint(n))) >> uint(n))
     return (i & (1 << uint(n))) >> uint(n)
 }
 
@@ -273,7 +274,7 @@ func main() {
 	}
 
     ciphertext := string(bts)
-    //ciphertext = "Q"
+    //ciphertext = "M"
 
     for index, plainRune := range plaintext {
         plainChar, _ := strconv.Unquote(strconv.QuoteRune(plainRune))
@@ -292,14 +293,16 @@ func main() {
                 // bit xor is 1 <=> cipherwheel bit was also 1;
                 // increment appropriate spokeWeight
                 wheelOffset := index % WHEEL_SIZES[sourceIndex]
-                nthBit := getNthBit(plainInt, sourceIndex) ^ getNthBit(cipherInt, destIndex)
+                nthBit := getNthBit(plainInt, 4-sourceIndex) ^ getNthBit(cipherInt, 4-destIndex)
                 spokeWeights[sourceIndex][wheelOffset][nthBit] += TRANSPOSE_PROBS[sourceIndex][destIndex]
-                //log.Printf("sourceIndex:\t%d\tdestIndex:\t%d\tnthBit:\t%d", sourceIndex, destIndex, nthBit)
+                if sourceIndex == 3 {
+                    //log.Printf("sourceIndex:\t%d\tdestIndex:\t%d\tnthBit:\t%d", sourceIndex, destIndex, nthBit)
+                }
             }
         }
     }
     
-    for _, bob := range spokeWeights[0] {
+    for _, bob := range spokeWeights[3] {
         log.Printf("%f\t%f\t%f", bob[0], bob[1], bob[0] + bob[1])
     }
     
