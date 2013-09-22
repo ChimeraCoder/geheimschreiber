@@ -647,11 +647,11 @@ func main() {
 		panic(err)
 	}
 
-	for wheelIndex, wheel := range wheels {
-		fmt.Printf("Wheel %d: {", wheelIndex)
+	for _, wheel := range wheels {
+		fmt.Printf("NewWheel([]int{")
 		for _, w := range wheel.Items {
 			fmt.Printf("%d, ", w)
 		}
-		fmt.Printf("}\n")
+		fmt.Printf("})\n")
 	}
 }
