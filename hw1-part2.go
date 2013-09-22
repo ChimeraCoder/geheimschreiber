@@ -456,8 +456,8 @@ func learnFirstFiveWheels(plaintext string, ciphertext string) {
 
 }
 
-//learnMostTransposeBits learns all of the bits in wheels 5-8, and most (but not all) of the bits in wheel 9
-func learnMostTransposeBits(plaintext, ciphertext string) {
+//learnEasyTransposeBits learns all of the bits in wheels 5-8, and most (but not all) of the bits in wheel 9
+func learnEasyTransposeBits(plaintext, ciphertext string) {
 
 	//Iterate over the ciphertext. If the ciphercharacter is one of T,3,4,5,E,K,Q,6,X,V,
 	//we XOR the plainInt with the current state of the XOR wheels (which is known)
@@ -517,41 +517,12 @@ func learnMostTransposeBits(plaintext, ciphertext string) {
 
 }
 
-func main() {
-
-	for i := 0; i < 10; i++ {
-
-		tmp_wheel := make([]*int, WHEEL_SIZES[i])
-
-		learnedWheels = append(learnedWheels, tmp_wheel)
-	}
-
-	ciphertext := parseCiphertext("gwriter/part_2/ciphertext.txt")
-	plaintext := parsePlaintext("gwriter/part_2/plaintext.txt")
-
-	//Learn all bits of the first five wheels
-	//The results are stored in learnedWheels (global variable)
-	learnFirstFiveWheels(plaintext, ciphertext)
-
-	//TODO check that all bit values are now known
-
-	//Convert learnedWheels to Wheel structs
-	//Store the result in the global variable "wheels"
-	for _, learnedWheel := range learnedWheels[:5] {
-		w := learnedWheelToWheel(learnedWheel)
-		wheels = append(wheels, w)
-	}
-
-	learnMostTransposeBits(plaintext, ciphertext)
-
-	//Convert the last five wheels of learnedWheels to Wheel structs
-	//Append the result to the global variable "wheels"
-	//We can ONLY do this for wheels 5-8 right now, because there
-	//are still unknown values on wheel 9
-	for _, learnedWheel := range learnedWheels[5:9] {
-		w := learnedWheelToWheel(learnedWheel)
-		wheels = append(wheels, w)
-	}
+//learnHardTransposeBits will learn the missing transpose bits in wheel 9, assuming all of wheels 5-8 are known
+//It WILL call ResetWheels() as part of its execution, which will reset wheel state.
+func learnHardTransposeBits(plaintext, ciphertext string) {
+	//Reset the wheels
+	//This is VERY IMPORTANT, or the learning will fail.
+	ResetWheels()
 
 	//Assume that any remaining "nil" values appear on wheel 9
 	//This lets us update the missing spoke values on wheel 9, given
@@ -569,11 +540,6 @@ func main() {
 		}
 		fmt.Printf("\n")
 	}
-
-	log.Print(unknownSpokeIndices)
-
-	//Reset the wheels
-	ResetWheels()
 
 	for index, plainRune := range plaintext {
 		plainChar := string(plainRune)
@@ -627,6 +593,46 @@ func main() {
 			TickAll(wheels)
 		}
 	}
+
+}
+
+func main() {
+
+	for i := 0; i < 10; i++ {
+
+		tmp_wheel := make([]*int, WHEEL_SIZES[i])
+
+		learnedWheels = append(learnedWheels, tmp_wheel)
+	}
+
+	ciphertext := parseCiphertext("gwriter/part_2/ciphertext.txt")
+	plaintext := parsePlaintext("gwriter/part_2/plaintext.txt")
+
+	//Learn all bits of the first five wheels
+	//The results are stored in learnedWheels (global variable)
+	learnFirstFiveWheels(plaintext, ciphertext)
+
+	//TODO check that all bit values are now known
+
+	//Convert learnedWheels to Wheel structs
+	//Store the result in the global variable "wheels"
+	for _, learnedWheel := range learnedWheels[:5] {
+		w := learnedWheelToWheel(learnedWheel)
+		wheels = append(wheels, w)
+	}
+
+	learnEasyTransposeBits(plaintext, ciphertext)
+
+	//Convert the last five wheels of learnedWheels to Wheel structs
+	//Append the result to the global variable "wheels"
+	//We can ONLY do this for wheels 5-8 right now, because there
+	//are still unknown values on wheel 9
+	for _, learnedWheel := range learnedWheels[5:9] {
+		w := learnedWheelToWheel(learnedWheel)
+		wheels = append(wheels, w)
+	}
+
+	learnHardTransposeBits(plaintext, ciphertext)
 
 	for _, wheel := range learnedWheels[5:10] {
 		for i, w := range wheel {
