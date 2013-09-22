@@ -13,7 +13,7 @@ var wheels []*Wheel
 var learnedWheels = [][]*int{}
 
 var WHEEL_SIZES = []int{47, 53, 59, 61, 64, 65, 67, 69, 71, 73}
-var LARGE_WHEEL_SIZES = []int{12088,12088,12088,12088,12088,12088,12088,12088,12088,12088}
+var LARGE_WHEEL_SIZES = []int{12088, 12088, 12088, 12088, 12088, 12088, 12088, 12088, 12088, 12088}
 
 var REMOVE_WHITESPACE_REGEX = regexp.MustCompile(`[\n\r]`)
 
@@ -497,12 +497,13 @@ func learnEasyTransposeBits(plaintext, ciphertext string) {
 					bit := *bitP
 
 					//Check that we are never overwriting an existing known value with a (conflicting) known value; this should never be possible
-					if learnedWheels[5+i][index%LARGE_WHEEL_SIZES[5+i]] != nil && *learnedWheels[5+i][index%LARGE_WHEEL_SIZES[5+i]] != bit {
+					//Unlike Part 2, we don't need to take the modulus because the wheel size has been set to the length of the text
+					if learnedWheels[5+i][index] != nil && *learnedWheels[5+i][index] != bit {
 						panic(fmt.Errorf("error: inconsistent transposition bit saved at %d for wheel %d", index, 5+i))
 					}
 
 					//Store the bit in the collection of learned wheels
-					learnedWheels[5+i][index%LARGE_WHEEL_SIZES[5+i]] = &bit
+					learnedWheels[5+i][index] = &bit
 				}
 			}
 
@@ -510,11 +511,7 @@ func learnEasyTransposeBits(plaintext, ciphertext string) {
 			TickAll(wheels)
 		}
 	}
-
 }
-
-
-
 
 //learnHardTransposeBits will learn the missing transpose bits in wheel 9, assuming all of wheels 5-8 are known
 //It WILL call ResetWheels() as part of its execution, which will reset wheel state.
@@ -611,38 +608,37 @@ func learnHardTransposeBits(plaintext, ciphertext string) error {
 
 }
 
-
 //removePossibleWheelState will remove the impossibleSize from the list of possible sizes for wheel with index wheelIndex in the set of possible sizes
-func removePossibleWheelState(possibleSizes []map[int]struct{}, wheelIndex, impossibleSize int) []map[int]struct{}{
-    
-    //Remove it from the list of possible sizes for the specified wheel iff it is present
-    if _, ok := possibleSizes[wheelIndex][impossibleSize]; ok {
-        delete(possibleSizes[wheelIndex], impossibleSize)
-        
-        //If there is only one possibility left, we know this wheel with certainty
-        //Delete this size from all other wheels
-        if len(possibleSizes[wheelIndex]) == 1{
+func removePossibleWheelState(possibleSizes []map[int]struct{}, wheelIndex, impossibleSize int) []map[int]struct{} {
 
-            //TODO figure out better hack
-            var actualSize int
-            for k, _ := range possibleSizes[wheelIndex]{
-                actualSize = k
-                break
-            }
+	//Remove it from the list of possible sizes for the specified wheel iff it is present
+	if _, ok := possibleSizes[wheelIndex][impossibleSize]; ok {
+		delete(possibleSizes[wheelIndex], impossibleSize)
 
-            for i, _ := range possibleSizes {
-                if i != wheelIndex{
-                    possibleSizes = removePossibleWheelState(possibleSizes, i, actualSize)
-                }
-            }
-        }
-    }
-    return possibleSizes
+		//If there is only one possibility left, we know this wheel with certainty
+		//Delete this size from all other wheels
+		if len(possibleSizes[wheelIndex]) == 1 {
+
+			//TODO figure out better hack
+			var actualSize int
+			for k, _ := range possibleSizes[wheelIndex] {
+				actualSize = k
+				break
+			}
+
+			for i, _ := range possibleSizes {
+				if i != wheelIndex {
+					possibleSizes = removePossibleWheelState(possibleSizes, i, actualSize)
+				}
+			}
+		}
+	}
+	return possibleSizes
 }
 
 func main() {
 
-    //Use the LARGE wheel sizes instead of the regular wheel sizes this time
+	//Use the LARGE wheel sizes instead of the regular wheel sizes this time
 	for i := 0; i < 10; i++ {
 		tmp_wheel := make([]*int, LARGE_WHEEL_SIZES[i])
 
@@ -656,96 +652,164 @@ func main() {
 	//The results are stored in learnedWheels (global variable)
 	learnFirstFiveWheels(plaintext, ciphertext)
 
+	POSSIBLE_SIZES := make([]map[int]struct{}, 10)
+	for i, _ := range POSSIBLE_SIZES {
+		POSSIBLE_SIZES[i] = map[int]struct{}{
+			47: {},
+			53: {},
+			59: {},
+			61: {},
+			64: {},
+			65: {},
+			67: {},
+			69: {},
+			71: {},
+			73: {},
+		}
+	}
 
+	for i := 0; i < 5; i++ {
+		for size := range POSSIBLE_SIZES[i] {
+			for spokeIndex := 0; spokeIndex < size; spokeIndex++ {
+				impliedBit := -1
+				for index := spokeIndex; index < len(plaintext); index += size {
+					currentBit := learnedWheels[i][index]
+					if currentBit != nil {
+						if impliedBit == -1 {
+							impliedBit = *currentBit
+						} else if impliedBit != *currentBit {
+							//This means we have found a conflict
+							//Remove this wheel size from the pool of possible wheel sizes for this wheel
+							POSSIBLE_SIZES = removePossibleWheelState(POSSIBLE_SIZES, i, size)
+						}
+					}
+				}
+			}
+		}
+	}
 
-    POSSIBLE_SIZES := make([]map[int]struct{}, 10)
-    for i, _ := range POSSIBLE_SIZES {
-        POSSIBLE_SIZES[i] = map[int]struct{}{
-            47 : {},
-            53 : {},
-            59 : {},
-            61 : {},
-            64 : {},
-            65 : {},
-            67 : {},
-            69 : {},
-            71 : {},
-            73 : {},
-        }
-    }
+	//At this point, all of the first five wheels should be known
+	//This is not always the case, but it will be the case for the current input
 
-    for i := 0; i < 5; i++ {
-        for size := range POSSIBLE_SIZES[i] {
-            for spokeIndex := 0; spokeIndex < size; spokeIndex++{
-                impliedBit := -1 
-                for index := spokeIndex; index < len(plaintext); index+=size{
-                    currentBit := learnedWheels[i][index]
-                    if currentBit != nil{
-                        if impliedBit == -1{
-                            impliedBit = *currentBit
-                        } else if impliedBit != *currentBit {
-                            //This means we have found a conflict
-                            //Remove this wheel size from the pool of possible wheel sizes for this wheel
-                            POSSIBLE_SIZES = removePossibleWheelState(POSSIBLE_SIZES, i, size)
-                        }
-                    }
-                }
-            }
-        }
-    }
+	//Now, we know the bits of wheels 0-4, but they are in the wrong locations
+	//Set those bits to the correct locations
+	for i, _ := range POSSIBLE_SIZES[:5] {
+		//TODO figure out better hack
+		var wheelSize int
+		for k, _ := range POSSIBLE_SIZES[i] {
+			wheelSize = k
+			break
+		}
 
-    //At this point, all of the first five wheels should be known
-    //This is not always the case, but it will be the case for the current input
+		for j, _ := range learnedWheels[i] {
+			if learnedWheels[i][j] != nil {
+				learnedWheels[i][j%wheelSize] = learnedWheels[i][j]
+			}
+		}
+	}
 
+	//Truncate the first five wheels to their correct sizes
+	for i, _ := range learnedWheels[:5] {
+		//TODO figure out better hack
+		var wheelSize int
+		for k, _ := range POSSIBLE_SIZES[i] {
+			wheelSize = k
+			break
+		}
+		learnedWheels[i] = learnedWheels[i][:wheelSize]
+	}
 
-    for i, _:= range POSSIBLE_SIZES[:5] {
-        //TODO figure out better hack
-        var wheelSize int
-            for k, _ := range POSSIBLE_SIZES[i]{
-                wheelSize = k
-                    break
-            }
+	//At this point, we know all the bits on the first five wheels
+	//AND they are in the correct locations
 
-        for j, _ := range learnedWheels[i]{
-            if learnedWheels[i][j] != nil{
-                learnedWheels[i][j % wheelSize] = learnedWheels[i][j]
-            }
-        }
-    }
+	//We are ready to create Wheel structs for the first five wheels
+	wheels = make([]*Wheel, 5)
+	//Create actual Wheel structs for these fully-learned wheels and append them to "wheels" (global variable)
+	for wheelIndex, lw := range learnedWheels[:5] {
+		items := make([]int, len(lw))
+		for i, item := range lw {
+			items[i] = *item
+		}
+		wheel := NewWheel(items)
+		wheels[wheelIndex] = wheel
+	}
 
-    //Truncate the first five wheels to their correct sizes
-    for i, _ := range learnedWheels[:5] {
-        //TODO figure out better hack
-        var wheelSize int
-            for k, _ := range POSSIBLE_SIZES[i]{
-                wheelSize = k
-                    break
-            }
-        learnedWheels[i] = learnedWheels[i][:wheelSize]
-    }
+	for _, w := range wheels[:5] {
+		log.Print(*w)
+	}
 
-    //At this point, we know all the bits on the first five wheels
+	//Now, we need to do the same thing, but for wheels 5-9
 
+	//Learn the transpose bits, though they will not be in the correct locations
+	learnEasyTransposeBits(plaintext, ciphertext)
 
+	//Figure out the actual sizes for wheels 5-9, so we can set the learned bits to be in the correct locations
+	for i := 5; i < 10; i++ {
+		for size := range POSSIBLE_SIZES[i] {
+			for spokeIndex := 0; spokeIndex < size; spokeIndex++ {
+				impliedBit := -1
+				for index := spokeIndex; index < len(plaintext); index += size {
+					currentBit := learnedWheels[i][index]
+					if currentBit != nil {
+						if impliedBit == -1 {
+							impliedBit = *currentBit
+						} else if impliedBit != *currentBit {
+							//This means we have found a conflict
+							//Remove this wheel size from the pool of possible wheel sizes for this wheel
+							POSSIBLE_SIZES = removePossibleWheelState(POSSIBLE_SIZES, i, size)
+						}
+					}
+				}
+			}
+		}
+	}
 
-    wheels = make([]*Wheel, 10)   
-    //Create actual Wheel structs for these fully-learned wheels and append them to "wheels" (global variable)
-    for wheelIndex, lw := range learnedWheels[:5]{
-        items := make([]int, len(lw))
-        for i, item := range lw{
-            items[i] = *item
-        }
-        wheel := NewWheel(items)
-        wheels[wheelIndex] = wheel
-    }
+	//At this point, all sizes for all wheels are known
 
-    for _, w := range wheels[:5]{
-        log.Print(*w)
-    }
+	//Now, we know the bits of wheels 5-9, but they are in the wrong locations
+	//Set those bits to the correct locations
+	for i, _ := range POSSIBLE_SIZES[5:] {
+		//TODO figure out better hack
+		var wheelSize int
+		for k, _ := range POSSIBLE_SIZES[5+i] {
+			wheelSize = k
+			break
+		}
 
+		for j, _ := range learnedWheels[5+i] {
+			if learnedWheels[5+i][j] != nil {
+				learnedWheels[5+i][j%wheelSize] = learnedWheels[5+i][j]
+			}
+		}
+	}
 
+	//Truncate the first five wheels to their correct sizes
+	for i, _ := range learnedWheels[5:] {
+		//TODO figure out better hack
+		var wheelSize int
+		for k, _ := range POSSIBLE_SIZES[5+i] {
+			wheelSize = k
+			break
+		}
+		learnedWheels[5+i] = learnedWheels[5+i][:wheelSize]
+	}
 
-    return
+	//We are ready to create Wheel structs for wheels 5-9
+	//Create actual Wheel structs for these fully-learned wheels and append them to "wheels" (global variable)
+	for _, lw := range learnedWheels[5:] {
+		items := make([]int, len(lw))
+		for i, item := range lw {
+			items[i] = *item
+		}
+		wheel := NewWheel(items)
+		wheels = append(wheels, wheel)
+	}
+
+	for _, w := range wheels[5:] {
+		log.Print(w.Items)
+	}
+
+	return
 
 	//TODO check that all bit values are now known
 
