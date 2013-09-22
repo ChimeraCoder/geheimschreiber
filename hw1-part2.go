@@ -363,6 +363,19 @@ func ResetWheels() {
 	}
 }
 
+
+//learnedWheelToWheel converts a learnedWheel array to a Wheel struct
+//Assume that all *int values are non-nil; otherwise this will panic
+func learnedWheelToWheel(learnedWheel []*int) *Wheel {
+		items := make([]int, len(learnedWheel))
+		for i, _ := range learnedWheel{
+			items[i] = *learnedWheel[i]
+		}
+		w := NewWheel(items)
+        return w
+}
+
+
 func main() {
 
 	// Initialize wheel slice to empty pairs
@@ -443,12 +456,8 @@ func main() {
 
 	//Convert learnedWheels to Wheel structs
 	//Store the result in the global variable "wheels"
-	for _, wheel := range learnedWheels[:5] {
-		items := make([]int, len(wheel))
-		for i, _ := range wheel {
-			items[i] = *wheel[i]
-		}
-		w := NewWheel(items)
+	for _, learnedWheel:= range learnedWheels[:5] {
+        w := learnedWheelToWheel(learnedWheel)
 		wheels = append(wheels, w)
 	}
 
@@ -482,7 +491,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			if index%73 == 26 || index%73 == 60 || index%73 == 65 {
+			if  index%73 == 65 {
 				log.Printf("Xored value is %d", xoredValue)
 				log.Printf("cipherInt is %d", cipherInt)
 				log.Printf("destIndex is %d", destIndex)
@@ -512,13 +521,8 @@ func main() {
 	//Append the result to the global variable "wheels"
 	//We can ONLY do this for wheels 5-8 right now, because there
 	//are still unknown values on wheel 9
-	for _, wheel := range learnedWheels[5:9] {
-		items := make([]int, len(wheel))
-		for i, _ := range wheel {
-
-			items[i] = *wheel[i]
-		}
-		w := NewWheel(items)
+	for _, learnedWheel:= range learnedWheels[5:9] {
+        w := learnedWheelToWheel(learnedWheel)
 		wheels = append(wheels, w)
 	}
 
