@@ -698,9 +698,52 @@ func main() {
     //This is not always the case, but it will be the case for the current input
 
 
-    for _, wheel := range POSSIBLE_SIZES {
-        log.Print(wheel)
+    for i, _:= range POSSIBLE_SIZES[:5] {
+        //TODO figure out better hack
+        var wheelSize int
+            for k, _ := range POSSIBLE_SIZES[i]{
+                wheelSize = k
+                    break
+            }
+
+        for j, _ := range learnedWheels[i]{
+            if learnedWheels[i][j] != nil{
+                learnedWheels[i][j % wheelSize] = learnedWheels[i][j]
+            }
+        }
     }
+
+    //Truncate the first five wheels to their correct sizes
+    for i, _ := range learnedWheels[:5] {
+        //TODO figure out better hack
+        var wheelSize int
+            for k, _ := range POSSIBLE_SIZES[i]{
+                wheelSize = k
+                    break
+            }
+        learnedWheels[i] = learnedWheels[i][:wheelSize]
+    }
+
+    //At this point, we know all the bits on the first five wheels
+
+
+
+    wheels = make([]*Wheel, 10)   
+    //Create actual Wheel structs for these fully-learned wheels and append them to "wheels" (global variable)
+    for wheelIndex, lw := range learnedWheels[:5]{
+        items := make([]int, len(lw))
+        for i, item := range lw{
+            items[i] = *item
+        }
+        wheel := NewWheel(items)
+        wheels[wheelIndex] = wheel
+    }
+
+    for _, w := range wheels[:5]{
+        log.Print(*w)
+    }
+
+
 
     return
 
