@@ -569,7 +569,7 @@ func learnHardTransposeBits(plaintext, ciphertext string) {
 				if destIndex == 4 {
 					if sourceIndex == 0 {
 						//We have already assumed that we know every spoke for every wheel but wheel 9 at this point
-						tmp := 1 - wheels[5].Items[index&WHEEL_SIZES[5]]
+						tmp := 1 - wheels[5].Items[index%WHEEL_SIZES[5]]
 						learnedWheels[9][index%WHEEL_SIZES[9]] = &tmp
 
 						//The value is no longer unknown, so remove it from the set of unknownSpokeIndices
@@ -577,13 +577,22 @@ func learnHardTransposeBits(plaintext, ciphertext string) {
 					}
 					if sourceIndex == 4 {
 						//We have already assumed that we know every spoke for every wheel but wheel 9 at this point
-						tmp := wheels[5].Items[index&WHEEL_SIZES[5]]
+						tmp := wheels[5].Items[index%WHEEL_SIZES[5]]
 						learnedWheels[9][index%WHEEL_SIZES[9]] = &tmp
 
 						//The value is no longer unknown, so remove it from the set of unknownSpokeIndices
 						delete(unknownSpokeIndices, *learnedWheels[9][index%WHEEL_SIZES[9]])
 					}
-				}
+				} else if destIndex == 3{
+                    if sourceIndex == 4{
+						//We have already assumed that we know every spoke for every wheel but wheel 9 at this point
+						tmp := 1 - wheels[5].Items[index%WHEEL_SIZES[5]]
+						learnedWheels[9][index%WHEEL_SIZES[9]] = &tmp
+
+						//The value is no longer unknown, so remove it from the set of unknownSpokeIndices
+						delete(unknownSpokeIndices, *learnedWheels[9][index%WHEEL_SIZES[9]])
+                    }
+                }
 			}
 			if !present {
 				//The wheels have only been incremented if xoredValue was called
