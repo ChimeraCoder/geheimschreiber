@@ -648,10 +648,10 @@ func main() {
 	}
 
 	for wheelIndex, wheel := range wheels {
-		fmt.Printf("Wheel %d: ", wheelIndex)
+		fmt.Printf("Wheel %d: {", wheelIndex)
 		for _, w := range wheel.Items {
-			fmt.Printf(" %d ", w)
+			fmt.Printf("%d, ", w)
 		}
-		fmt.Printf("\n")
+		fmt.Printf("}\n")
 	}
 }
