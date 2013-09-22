@@ -489,7 +489,7 @@ func learnEasyTransposeBits(plaintext, ciphertext string) {
 			if err != nil {
 				panic(err)
 			}
-			
+
 			inferredBits := inferTransposeBits(sourceIndex, destIndex)
 			for i, bitP := range inferredBits {
 				if bitP != nil {
@@ -514,7 +514,7 @@ func learnEasyTransposeBits(plaintext, ciphertext string) {
 
 //learnHardTransposeBits will learn the missing transpose bits in wheel 9, assuming all of wheels 5-8 are known
 //It WILL call ResetWheels() as part of its execution, which will reset wheel state.
-func learnHardTransposeBits(plaintext, ciphertext string) {
+func learnHardTransposeBits(plaintext, ciphertext string) error {
 	//Reset the wheels
 	//This is VERY IMPORTANT, or the learning will fail.
 	ResetWheels()
@@ -591,6 +591,20 @@ func learnHardTransposeBits(plaintext, ciphertext string) {
 		}
 	}
 
+	//Check if all bits of all wheels have been learned
+	//If all bits of all wheels have not been learned by this point, throw an error
+
+	for wheelIndex, wheel := range learnedWheels {
+		for i, w := range wheel {
+			if w == nil {
+				return fmt.Errorf("error: wheel %d spoke %d is unknown", wheelIndex, i)
+			}
+		}
+	}
+
+	wheels = append(wheels, learnedWheelToWheel(learnedWheels[9]))
+	return nil
+
 }
 
 func main() {
@@ -629,17 +643,14 @@ func main() {
 		wheels = append(wheels, w)
 	}
 
-	learnHardTransposeBits(plaintext, ciphertext)
+	if err := learnHardTransposeBits(plaintext, ciphertext); err != nil {
+		panic(err)
+	}
 
-	for wheelIndex, wheel := range learnedWheels[5:10] {
-        fmt.Printf("Wheel %d: ", wheelIndex)
-		for i, w := range wheel {
-			if w == nil {
-				fmt.Print(" <nil> ")
-				fmt.Printf("index is %d ", i)
-			} else {
-				fmt.Printf(" %d ", *w)
-			}
+	for wheelIndex, wheel := range wheels {
+		fmt.Printf("Wheel %d: ", wheelIndex)
+		for _, w := range wheel.Items {
+			fmt.Printf(" %d ", w)
 		}
 		fmt.Printf("\n")
 	}
