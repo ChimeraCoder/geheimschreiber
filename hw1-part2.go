@@ -489,12 +489,7 @@ func learnEasyTransposeBits(plaintext, ciphertext string) {
 			if err != nil {
 				panic(err)
 			}
-			if index%73 == 65 {
-				log.Printf("Xored value is %d", xoredValue)
-				log.Printf("cipherInt is %d", cipherInt)
-				log.Printf("destIndex is %d", destIndex)
-				log.Printf("sourceIndex is %d", sourceIndex)
-			}
+			
 			inferredBits := inferTransposeBits(sourceIndex, destIndex)
 			for i, bitP := range inferredBits {
 				if bitP != nil {
@@ -532,13 +527,8 @@ func learnHardTransposeBits(plaintext, ciphertext string) {
 		for i, w := range wheel {
 			if w == nil {
 				unknownSpokeIndices[i] = struct{}{}
-				fmt.Print(" <nil> ")
-				fmt.Printf("index is %d ", i)
-			} else {
-				fmt.Printf(" %d ", *w)
 			}
 		}
-		fmt.Printf("\n")
 	}
 
 	for index, plainRune := range plaintext {
@@ -641,7 +631,8 @@ func main() {
 
 	learnHardTransposeBits(plaintext, ciphertext)
 
-	for _, wheel := range learnedWheels[5:10] {
+	for wheelIndex, wheel := range learnedWheels[5:10] {
+        fmt.Printf("Wheel %d: ", wheelIndex)
 		for i, w := range wheel {
 			if w == nil {
 				fmt.Print(" <nil> ")
