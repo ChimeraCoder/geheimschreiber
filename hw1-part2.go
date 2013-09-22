@@ -14,6 +14,8 @@ var learnedWheels = [][]*int{}
 
 var WHEEL_SIZES = []int{47, 53, 59, 61, 64, 65, 67, 69, 71, 73}
 
+var REMOVE_WHITESPACE_REGEX = regexp.MustCompile(`[\n\r]`)
+
 var interestingCharacters = map[string]struct{}{"T": {},
 	"3": {},
 	"4": {},
@@ -363,29 +365,50 @@ func ResetWheels() {
 	}
 }
 
-
 //learnedWheelToWheel converts a learnedWheel array to a Wheel struct
 //Assume that all *int values are non-nil; otherwise this will panic
 func learnedWheelToWheel(learnedWheel []*int) *Wheel {
-		items := make([]int, len(learnedWheel))
-		for i, _ := range learnedWheel{
-			items[i] = *learnedWheel[i]
-		}
-		w := NewWheel(items)
-        return w
+	items := make([]int, len(learnedWheel))
+	for i, _ := range learnedWheel {
+		items[i] = *learnedWheel[i]
+	}
+	w := NewWheel(items)
+	return w
 }
 
+//TODO these don't really need to be separate functions, as long as the format is the same (which it currently is)
 
-func main() {
-
-	// Initialize wheel slice to empty pairs
-
-	for i := 0; i < 10; i++ {
-
-		tmp_wheel := make([]*int, WHEEL_SIZES[i])
-
-		learnedWheels = append(learnedWheels, tmp_wheel)
+func parsePlaintext(filename string) string {
+	bts, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
 	}
+
+	plaintext := string(bts)
+
+	//Strip out newlines and carriage returns from both plaintext and ciphertext
+	plaintext = REMOVE_WHITESPACE_REGEX.ReplaceAllString(plaintext, "")
+	return plaintext
+}
+
+func parseCiphertext(filename string) string {
+	bts, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
+	}
+
+	ciphertext := string(bts)
+
+	ciphertext = REMOVE_WHITESPACE_REGEX.ReplaceAllString(ciphertext, "")
+	return ciphertext
+
+}
+
+//func learnFirstFiveWheels learns all spoke values from the first five wheels
+//This happens to work for the plaintext/ciphertext pair that we used for testing; it is not guaranteed to work for all texts, particularly shorter texts
+func learnFirstFiveWheels(plaintext string, ciphertext string) {
+
+	//TODO don't use a global variable (learnedWheels) to store the results
 
 	// Iterate across plaintext. For each character:
 	// For each bit c0-c4:
@@ -394,27 +417,6 @@ func main() {
 
 	// Examine all observed spoke 0-1 pairs. For all that pass a threshold, declare it 0 or 1.
 	// Abort if any spoke fails this threshold.
-
-	//Initialize wheels
-
-	bts, err := ioutil.ReadFile("gwriter/part_2/plaintext.txt")
-	if err != nil {
-		panic(err)
-	}
-
-	plaintext := string(bts)
-
-	bts, err = ioutil.ReadFile("gwriter/part_2/ciphertext.txt")
-	if err != nil {
-		print(err)
-	}
-
-	ciphertext := string(bts)
-
-	//Strip out newlines and carriage returns from both plaintext and ciphertext
-	r := regexp.MustCompile(`[\n\r]`)
-	ciphertext = r.ReplaceAllString(ciphertext, "")
-	plaintext = r.ReplaceAllString(plaintext, "")
 
 	//Iterate over plaintext and ciphertext in lockstep
 	// For each cipherchar 2 or 7 encountered:
@@ -452,14 +454,10 @@ func main() {
 		}
 	}
 
-	//TODO check that all bit values are now known
+}
 
-	//Convert learnedWheels to Wheel structs
-	//Store the result in the global variable "wheels"
-	for _, learnedWheel:= range learnedWheels[:5] {
-        w := learnedWheelToWheel(learnedWheel)
-		wheels = append(wheels, w)
-	}
+//learnMostTransposeBits learns all of the bits in wheels 5-8, and most (but not all) of the bits in wheel 9
+func learnMostTransposeBits(plaintext, ciphertext string) {
 
 	//Iterate over the ciphertext. If the ciphercharacter is one of T,3,4,5,E,K,Q,6,X,V,
 	//we XOR the plainInt with the current state of the XOR wheels (which is known)
@@ -491,7 +489,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			if  index%73 == 65 {
+			if index%73 == 65 {
 				log.Printf("Xored value is %d", xoredValue)
 				log.Printf("cipherInt is %d", cipherInt)
 				log.Printf("destIndex is %d", destIndex)
@@ -517,12 +515,41 @@ func main() {
 		}
 	}
 
+}
+
+func main() {
+
+	for i := 0; i < 10; i++ {
+
+		tmp_wheel := make([]*int, WHEEL_SIZES[i])
+
+		learnedWheels = append(learnedWheels, tmp_wheel)
+	}
+
+	ciphertext := parseCiphertext("gwriter/part_2/ciphertext.txt")
+	plaintext := parsePlaintext("gwriter/part_2/plaintext.txt")
+
+	//Learn all bits of the first five wheels
+	//The results are stored in learnedWheels (global variable)
+	learnFirstFiveWheels(plaintext, ciphertext)
+
+	//TODO check that all bit values are now known
+
+	//Convert learnedWheels to Wheel structs
+	//Store the result in the global variable "wheels"
+	for _, learnedWheel := range learnedWheels[:5] {
+		w := learnedWheelToWheel(learnedWheel)
+		wheels = append(wheels, w)
+	}
+
+	learnMostTransposeBits(plaintext, ciphertext)
+
 	//Convert the last five wheels of learnedWheels to Wheel structs
 	//Append the result to the global variable "wheels"
 	//We can ONLY do this for wheels 5-8 right now, because there
 	//are still unknown values on wheel 9
-	for _, learnedWheel:= range learnedWheels[5:9] {
-        w := learnedWheelToWheel(learnedWheel)
+	for _, learnedWheel := range learnedWheels[5:9] {
+		w := learnedWheelToWheel(learnedWheel)
 		wheels = append(wheels, w)
 	}
 
