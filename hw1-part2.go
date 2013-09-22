@@ -357,6 +357,12 @@ func OffsetWheel(wheel_index int, offset int) {
 	wheels[wheel_index].CurrentIndex = offset
 }
 
+func ResetWheels() {
+	for _, w := range wheels {
+		w.CurrentIndex = 0
+	}
+}
+
 func main() {
 
 	// Initialize wheel slice to empty pairs
@@ -436,6 +442,7 @@ func main() {
 	//TODO check that all bit values are now known
 
 	//Convert learnedWheels to Wheel structs
+	//Store the result in the global variable "wheels"
 	for _, wheel := range learnedWheels[:5] {
 		items := make([]int, len(wheel))
 		for i, _ := range wheel {
@@ -465,6 +472,7 @@ func main() {
 			//XOR the plainInt with the current state of the XOR wheels
 
 			xoredValue := xorCurrentCharacter(plainInt)
+
 			sourceIndex, err := FindUniqueBitIndex(xoredValue)
 			if err != nil {
 				panic(err)
@@ -474,7 +482,12 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-
+			if index%73 == 26 || index%73 == 60 || index%73 == 65 {
+				log.Printf("Xored value is %d", xoredValue)
+				log.Printf("cipherInt is %d", cipherInt)
+				log.Printf("destIndex is %d", destIndex)
+				log.Printf("sourceIndex is %d", sourceIndex)
+			}
 			inferredBits := inferTransposeBits(sourceIndex, destIndex)
 			for i, bitP := range inferredBits {
 				if bitP != nil {
@@ -495,15 +508,104 @@ func main() {
 		}
 	}
 
+	//Convert the last five wheels of learnedWheels to Wheel structs
+	//Append the result to the global variable "wheels"
+	//We can ONLY do this for wheels 5-8 right now, because there
+	//are still unknown values on wheel 9
+	for _, wheel := range learnedWheels[5:9] {
+		items := make([]int, len(wheel))
+		for i, _ := range wheel {
+
+			items[i] = *wheel[i]
+		}
+		w := NewWheel(items)
+		wheels = append(wheels, w)
+	}
+
+	//Assume that any remaining "nil" values appear on wheel 9
+	//This lets us update the missing spoke values on wheel 9, given
+	//the values on wheels 5-8
+	unknownSpokeIndices := map[int]struct{}{}
 	for _, wheel := range learnedWheels[5:10] {
-		for _, w := range wheel {
+		for i, w := range wheel {
 			if w == nil {
+				unknownSpokeIndices[i] = struct{}{}
 				fmt.Print(" <nil> ")
+				fmt.Printf("index is %d ", i)
 			} else {
 				fmt.Printf(" %d ", *w)
 			}
 		}
 		fmt.Printf("\n")
+	}
 
+	log.Print(unknownSpokeIndices)
+
+	//Reset the wheels
+	ResetWheels()
+
+	for index, plainRune := range plaintext {
+		plainChar := string(plainRune)
+
+		plainInt := alphabet[plainChar]
+
+		cipherRune := rune(ciphertext[index])
+		cipherChar := string(cipherRune)
+
+		cipherInt := alphabet[cipherChar]
+
+		present := false
+
+		if _, ok := interestingCharacters[cipherChar]; ok {
+			if _, ok := unknownSpokeIndices[index%WHEEL_SIZES[9]]; ok {
+				present = true
+				xoredValue := xorCurrentCharacter(plainInt)
+				sourceIndex, err := FindUniqueBitIndex(xoredValue)
+				if err != nil {
+					panic(err)
+				}
+				destIndex, err := FindUniqueBitIndex(cipherInt)
+				if err != nil {
+					panic(err)
+				}
+
+				if destIndex == 4 {
+					if sourceIndex == 0 {
+						//We have already assumed that we know every spoke for every wheel but wheel 9 at this point
+						tmp := 1 - wheels[5].Items[index&WHEEL_SIZES[5]]
+						learnedWheels[9][index%WHEEL_SIZES[9]] = &tmp
+
+						//The value is no longer unknown, so remove it from the set of unknownSpokeIndices
+						delete(unknownSpokeIndices, *learnedWheels[9][index%WHEEL_SIZES[9]])
+					}
+					if sourceIndex == 4 {
+						//We have already assumed that we know every spoke for every wheel but wheel 9 at this point
+						tmp := wheels[5].Items[index&WHEEL_SIZES[5]]
+						learnedWheels[9][index%WHEEL_SIZES[9]] = &tmp
+
+						//The value is no longer unknown, so remove it from the set of unknownSpokeIndices
+						delete(unknownSpokeIndices, *learnedWheels[9][index%WHEEL_SIZES[9]])
+					}
+				}
+			}
+			if !present {
+				//The wheels have only been incremented if xoredValue was called
+				TickAll(wheels)
+			}
+		} else {
+			TickAll(wheels)
+		}
+	}
+
+	for _, wheel := range learnedWheels[5:10] {
+		for i, w := range wheel {
+			if w == nil {
+				fmt.Print(" <nil> ")
+				fmt.Printf("index is %d ", i)
+			} else {
+				fmt.Printf(" %d ", *w)
+			}
+		}
+		fmt.Printf("\n")
 	}
 }
