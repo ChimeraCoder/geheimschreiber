@@ -268,6 +268,9 @@ func main() {
 	log.Print(encrypted)
 
 	bts, err = ioutil.ReadFile("gwriter/part_1/ciphertext.txt")
+	if err != nil {
+		panic(err)
+	}
 
 	//encrypted_text_matches := string(bts) == encrypted
 
@@ -292,5 +295,29 @@ func main() {
 	log.Print(decrypted)
 	decrypted_text_matches := plaintext == decrypted
 	log.Print(decrypted_text_matches)
+
+	//Check output of part 2
+	wheels = PART_2_SOLVED_WHEELS
+
+	bts, err = ioutil.ReadFile("gwriter/part_2/plaintext.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	plaintext = string(bts)
+
+	bts, err = ioutil.ReadFile("gwriter/part_2/ciphertext.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	ciphertext := string(bts)
+
+	result, err := DecryptString(ciphertext)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Print(result)
 
 }
