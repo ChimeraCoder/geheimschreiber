@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -15,7 +14,7 @@ var wheels []*Wheel
 var learnedWheels = [][]*int{}
 
 var WHEEL_SIZES = []int{47, 53, 59, 61, 64, 65, 67, 69, 71, 73}
-var LARGE_WHEEL_SIZES = []int{12088, 12088, 12088, 12088, 12088, 12088, 12088, 12088, 12088, 12088}
+var LARGE_WHEEL_SIZES = []int{26996, 26996, 26996, 26996, 26996, 26996, 26996, 26996, 26996, 26996}
 
 var REMOVE_WHITESPACE_REGEX = regexp.MustCompile(`[\n\r]`)
 
@@ -381,18 +380,7 @@ func learnedWheelToWheel(learnedWheel []*int) *Wheel {
 
 //TODO these don't really need to be separate functions, as long as the format is the same (which it currently is)
 
-func parsePlaintext(filename string) string {
-	bts, err := ioutil.ReadFile(filename)
-	if err != nil {
-		panic(err)
-	}
 
-	plaintext := string(bts)
-
-	//Strip out newlines and carriage returns from both plaintext and ciphertext
-	plaintext = REMOVE_WHITESPACE_REGEX.ReplaceAllString(plaintext, "")
-	return plaintext
-}
 
 //Via http://stackoverflow.com/questions/8757389/reading-file-line-by-line-in-go
 func Readln(r *bufio.Reader) (string, error) {
@@ -408,7 +396,7 @@ func Readln(r *bufio.Reader) (string, error) {
 	return string(ln), err
 }
 
-func parseCiphertext(filename string) string {
+func parseCiphertext(filename string) (string, string) {
 
 	f, err := os.Open(filename)
 	if err != nil {
@@ -417,26 +405,29 @@ func parseCiphertext(filename string) string {
 	}
 
     ciphertext := ""
+    plaintext := ""
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
         currentLine := scanner.Text()
         //Assume every line is at least 13 characters
 
-        addition := currentLine[:11]
-        for _, _ = range currentLine[12:len(currentLine)-1]{
-            addition += "-"
-        }
-        addition += currentLine[len(currentLine)-2:]
+        plaintext += "UMUM4VEVE35"
+        ciphertext += currentLine[:11]
 
-        ciphertext += addition
+        for _, _ = range currentLine[12:len(currentLine)-1]{
+            ciphertext += "-"
+            plaintext += "-"
+        }
+        ciphertext += currentLine[len(currentLine)-2:]
+        plaintext += "35"
+
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
 
-    log.Print(ciphertext)
 	ciphertext = REMOVE_WHITESPACE_REGEX.ReplaceAllString(ciphertext, "")
-	return ciphertext
+	return ciphertext, plaintext
 
 }
 
@@ -461,6 +452,9 @@ func learnFirstFiveWheels(plaintext string, ciphertext string) {
 	// Else:
 	for index, plainRune := range plaintext {
 		plainChar := string(plainRune)
+        if plainChar == "-"{
+            continue
+        }
 
 		plainInt := alphabet[plainChar]
 
@@ -502,6 +496,10 @@ func learnEasyTransposeBits(plaintext, ciphertext string) {
 	//Based on where the unique bit (the unique 0 or unique 1) started and ended, we can deduce at least 2 transposed bits
 	for index, plainRune := range plaintext {
 		plainChar := string(plainRune)
+        if plainChar == "-"{
+            TickAll(wheels)
+            continue
+        }
 
 		plainInt := alphabet[plainChar]
 
@@ -680,14 +678,12 @@ func main() {
 		learnedWheels = append(learnedWheels, tmp_wheel)
 	}
 
-	ciphertext := parseCiphertext("gwriter/bonus/bonus_ciphertext.txt")
-	plaintext := parsePlaintext("gwriter/part_3/plaintext.txt")
+	ciphertext, plaintext := parseCiphertext("gwriter/bonus/bonus_ciphertext.txt")
 
 
-    return
-		//Learn all bits of the first five wheels
-		//The results are stored in learnedWheels (global variable)
-		learnFirstFiveWheels(plaintext, ciphertext)
+        //Learn all bits of the first five wheels
+        //The results are stored in learnedWheels (global variable)
+        learnFirstFiveWheels(plaintext, ciphertext)
 
 	POSSIBLE_SIZES := make([]map[int]struct{}, 10)
 	for i, _ := range POSSIBLE_SIZES {
@@ -846,37 +842,14 @@ func main() {
 		log.Print(w.Items)
 	}
 
-	return
 
-	//TODO check that all bit values are now known
-
-	//Convert learnedWheels to Wheel structs
-	//Store the result in the global variable "wheels"
-	for _, learnedWheel := range learnedWheels[:5] {
-		w := learnedWheelToWheel(learnedWheel)
-		wheels = append(wheels, w)
-	}
-
-	learnEasyTransposeBits(plaintext, ciphertext)
-
-	//Convert the last five wheels of learnedWheels to Wheel structs
-	//Append the result to the global variable "wheels"
-	//We can ONLY do this for wheels 5-8 right now, because there
-	//are still unknown values on wheel 9
-	for _, learnedWheel := range learnedWheels[5:9] {
-		w := learnedWheelToWheel(learnedWheel)
-		wheels = append(wheels, w)
-	}
-
-	if err := learnHardTransposeBits(plaintext, ciphertext); err != nil {
-		panic(err)
-	}
-
+    fmt.Printf("package main\nvar PART_4_SOLVED_WHEELS = []*Wheel{")
 	for _, wheel := range wheels {
 		fmt.Printf("NewWheel([]int{")
 		for _, w := range wheel.Items {
 			fmt.Printf("%d, ", w)
 		}
-		fmt.Printf("})\n")
+		fmt.Printf("}),\n")
 	}
+    fmt.Printf("}")
 }
