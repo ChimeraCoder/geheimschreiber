@@ -809,37 +809,5 @@ func main() {
 		log.Print(w.Items)
 	}
 
-	return
 
-	//TODO check that all bit values are now known
-
-	//Convert learnedWheels to Wheel structs
-	//Store the result in the global variable "wheels"
-	for _, learnedWheel := range learnedWheels[:5] {
-		w := learnedWheelToWheel(learnedWheel)
-		wheels = append(wheels, w)
-	}
-
-	learnEasyTransposeBits(plaintext, ciphertext)
-
-	//Convert the last five wheels of learnedWheels to Wheel structs
-	//Append the result to the global variable "wheels"
-	//We can ONLY do this for wheels 5-8 right now, because there
-	//are still unknown values on wheel 9
-	for _, learnedWheel := range learnedWheels[5:9] {
-		w := learnedWheelToWheel(learnedWheel)
-		wheels = append(wheels, w)
-	}
-
-	if err := learnHardTransposeBits(plaintext, ciphertext); err != nil {
-		panic(err)
-	}
-
-	for _, wheel := range wheels {
-		fmt.Printf("NewWheel([]int{")
-		for _, w := range wheel.Items {
-			fmt.Printf("%d, ", w)
-		}
-		fmt.Printf("})\n")
-	}
 }
