@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+    "fmt"
 	"io/ioutil"
 	"log"
 	//"regexp"
@@ -338,7 +339,7 @@ func main() {
 
     log.Printf("BELOW IS PART 4\n\n\n\n\n")
 
-	log.Print(result)
+	fmt.Print(result)
 
 
 }
