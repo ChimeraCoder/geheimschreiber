@@ -320,4 +320,25 @@ func main() {
 
 	log.Print(result)
 
+
+  //Check output of part 4
+	wheels = PART_4_SOLVED_WHEELS
+
+	bts, err = ioutil.ReadFile("gwriter/bonus/bonus_ciphertext.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	ciphertext = string(bts)
+
+	result, err = DecryptString(ciphertext)
+	if err != nil {
+		panic(err)
+	}
+
+    log.Printf("BELOW IS PART 4\n\n\n\n\n")
+
+	log.Print(result)
+
+
 }
