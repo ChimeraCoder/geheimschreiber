@@ -380,8 +380,6 @@ func learnedWheelToWheel(learnedWheel []*int) *Wheel {
 
 //TODO these don't really need to be separate functions, as long as the format is the same (which it currently is)
 
-
-
 //Via http://stackoverflow.com/questions/8757389/reading-file-line-by-line-in-go
 func Readln(r *bufio.Reader) (string, error) {
 	var (
@@ -404,22 +402,22 @@ func parseCiphertext(filename string) (string, string) {
 		panic(err)
 	}
 
-    ciphertext := ""
-    plaintext := ""
+	ciphertext := ""
+	plaintext := ""
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-        currentLine := scanner.Text()
-        //Assume every line is at least 13 characters
+		currentLine := scanner.Text()
+		//Assume every line is at least 13 characters
 
-        plaintext += "UMUM4VEVE35"
-        ciphertext += currentLine[:11]
+		plaintext += "UMUM4VEVE35"
+		ciphertext += currentLine[:11]
 
-        for _, _ = range currentLine[12:len(currentLine)-1]{
-            ciphertext += "-"
-            plaintext += "-"
-        }
-        ciphertext += currentLine[len(currentLine)-2:]
-        plaintext += "35"
+		for _, _ = range currentLine[12 : len(currentLine)-1] {
+			ciphertext += "-"
+			plaintext += "-"
+		}
+		ciphertext += currentLine[len(currentLine)-2:]
+		plaintext += "35"
 
 	}
 	if err := scanner.Err(); err != nil {
@@ -452,9 +450,9 @@ func learnFirstFiveWheels(plaintext string, ciphertext string) {
 	// Else:
 	for index, plainRune := range plaintext {
 		plainChar := string(plainRune)
-        if plainChar == "-"{
-            continue
-        }
+		if plainChar == "-" {
+			continue
+		}
 
 		plainInt := alphabet[plainChar]
 
@@ -496,10 +494,10 @@ func learnEasyTransposeBits(plaintext, ciphertext string) {
 	//Based on where the unique bit (the unique 0 or unique 1) started and ended, we can deduce at least 2 transposed bits
 	for index, plainRune := range plaintext {
 		plainChar := string(plainRune)
-        if plainChar == "-"{
-            TickAll(wheels)
-            continue
-        }
+		if plainChar == "-" {
+			TickAll(wheels)
+			continue
+		}
 
 		plainInt := alphabet[plainChar]
 
@@ -680,10 +678,9 @@ func main() {
 
 	ciphertext, plaintext := parseCiphertext("gwriter/bonus/bonus_ciphertext.txt")
 
-
-        //Learn all bits of the first five wheels
-        //The results are stored in learnedWheels (global variable)
-        learnFirstFiveWheels(plaintext, ciphertext)
+	//Learn all bits of the first five wheels
+	//The results are stored in learnedWheels (global variable)
+	learnFirstFiveWheels(plaintext, ciphertext)
 
 	POSSIBLE_SIZES := make([]map[int]struct{}, 10)
 	for i, _ := range POSSIBLE_SIZES {
@@ -842,8 +839,7 @@ func main() {
 		log.Print(w.Items)
 	}
 
-
-    fmt.Printf("package main\nvar PART_4_SOLVED_WHEELS = []*Wheel{")
+	fmt.Printf("package main\nvar PART_4_SOLVED_WHEELS = []*Wheel{")
 	for _, wheel := range wheels {
 		fmt.Printf("NewWheel([]int{")
 		for _, w := range wheel.Items {
@@ -851,5 +847,5 @@ func main() {
 		}
 		fmt.Printf("}),\n")
 	}
-    fmt.Printf("}\n")
+	fmt.Printf("}\n")
 }

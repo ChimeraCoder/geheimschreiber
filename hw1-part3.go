@@ -805,9 +805,14 @@ func main() {
 		wheels = append(wheels, wheel)
 	}
 
-	for _, w := range wheels[5:] {
-		log.Print(w.Items)
+	fmt.Printf("package main\nvar PART_4_SOLVED_WHEELS = []*Wheel{")
+	for _, wheel := range wheels {
+		fmt.Printf("NewWheel([]int{")
+		for _, w := range wheel.Items {
+			fmt.Printf("%d, ", w)
+		}
+		fmt.Printf("}),\n")
 	}
-
+	fmt.Printf("}\n")
 
 }

@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-    "fmt"
+	"fmt"
 	"io/ioutil"
 	"log"
 	//"regexp"
@@ -321,8 +321,7 @@ func main() {
 
 	log.Print(result)
 
-
-  //Check output of part 4
+	//Check output of part 4
 	wheels = PART_4_SOLVED_WHEELS
 
 	bts, err = ioutil.ReadFile("gwriter/bonus/bonus_ciphertext.txt")
@@ -337,9 +336,8 @@ func main() {
 		panic(err)
 	}
 
-    log.Printf("BELOW IS PART 4\n\n\n\n\n")
+	log.Printf("BELOW IS PART 4\n\n\n\n\n")
 
 	fmt.Print(result)
-
 
 }
