@@ -851,5 +851,5 @@ func main() {
 		}
 		fmt.Printf("}),\n")
 	}
-    fmt.Printf("}")
+    fmt.Printf("}\n")
 }
