@@ -207,6 +207,19 @@ func TickAll(ws []*Wheel) {
 	}
 }
 
+func (w Wheel) Equals(other Wheel) bool {
+    if w.MaxSize != other.MaxSize {
+        return false
+    }
+    for i, item := range w.Items{
+        if item != other.Items[i]{
+            return false
+        }
+    }
+    return true
+}
+
+
 //xorCurrentCharacter takes an integer representation of a character
 //and XORs it with the current bit on each of wheel b0 through b4
 //This assumes that "wheels" is a valid array of wheels of length <= 5
@@ -667,7 +680,8 @@ func removePossibleWheelState(possibleSizes []map[int]struct{}, wheelIndex, impo
 	return possibleSizes
 }
 
-func main() {
+//TODO rename this
+func crackMessage(filename string) []*Wheel{
 
 	//Use the LARGE wheel sizes instead of the regular wheel sizes this time
 	for i := 0; i < 10; i++ {
@@ -676,7 +690,7 @@ func main() {
 		learnedWheels = append(learnedWheels, tmp_wheel)
 	}
 
-	ciphertext, plaintext := parseCiphertext("gwriter/bonus/bonus_ciphertext.txt")
+	ciphertext, plaintext := parseCiphertext(filename)
 
 	//Learn all bits of the first five wheels
 	//The results are stored in learnedWheels (global variable)
@@ -848,4 +862,9 @@ func main() {
 		fmt.Printf("}),\n")
 	}
 	fmt.Printf("}\n")
+    return wheels
+}
+
+func main(){
+    crackMessage("test_ciphertext.txt")
 }
