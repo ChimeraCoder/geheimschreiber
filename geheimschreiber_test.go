@@ -1,7 +1,6 @@
 package main
 
 import (
-    "log"
     "testing"
 )
 
@@ -22,7 +21,6 @@ var TEST_CIPHERTEXT_SOLVED_WHEELS = []*Wheel{NewWheel([]int{0, 0, 1, 1, 1, 0, 0,
 func Test_LoadingCiphertext(t *testing.T) {
 
     ciphertext, plaintext := parseCiphertext(TEST_CIPHERTEXT_FILE)
-    log.Print(ciphertext[:20])
 
     //Plaintext is generated from reading ciphertext
     //We know it starts off with UMUM4VEVE35

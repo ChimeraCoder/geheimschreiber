@@ -778,10 +778,6 @@ func crackMessage(filename string) []*Wheel{
 		wheels[wheelIndex] = wheel
 	}
 
-	for _, w := range wheels[:5] {
-		log.Print(*w)
-	}
-
 	//Now, we need to do the same thing, but for wheels 5-9
 
 	//Learn the transpose bits, though they will not be in the correct locations
@@ -849,19 +845,7 @@ func crackMessage(filename string) []*Wheel{
 		wheels = append(wheels, wheel)
 	}
 
-	for _, w := range wheels[5:] {
-		log.Print(w.Items)
-	}
-
-	fmt.Printf("package main\nvar PART_4_SOLVED_WHEELS = []*Wheel{")
-	for _, wheel := range wheels {
-		fmt.Printf("NewWheel([]int{")
-		for _, w := range wheel.Items {
-			fmt.Printf("%d, ", w)
-		}
-		fmt.Printf("}),\n")
-	}
-	fmt.Printf("}\n")
+    //TODO this is a global variable; it should eventually not be
     return wheels
 }
 
