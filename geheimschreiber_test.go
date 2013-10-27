@@ -68,10 +68,6 @@ func Test_Decryption(t *testing.T) {
 }
 
 func Test_Encryption(t *testing.T){
-    //Determine the correct wheels
-    wheels := crackMessage(TEST_CIPHERTEXT_FILE)
-
-
     bts, err := ioutil.ReadFile(TEST_PLAINTEXT_FILE)
     if err != nil{
         t.Errorf("Error reading file: %s", err.Error())
@@ -85,12 +81,19 @@ func Test_Encryption(t *testing.T){
     }
     ciphertext := string(bts)
 
-    result, err := EncryptString(wheels, plaintext)
+    result, err := EncryptString(TEST_CIPHERTEXT_SOLVED_WHEELS, plaintext)
     if err != nil{
         t.Errorf("Error encrypting string: %s", err.Error())
     }
 
     if result != ciphertext {
-        t.Errorf("Encrypted plaintext does not match target ciphertext")
+        diff := -1
+        for i:=0; i < len(result); i++ {
+            if result[i] != ciphertext[i]{
+                diff = i
+                break
+            }
+        }
+        t.Errorf("Encrypted plaintext (length %d) does not match target ciphertext (length %d) - first error at char %d ", len(result), len(ciphertext), diff)
     }
 }

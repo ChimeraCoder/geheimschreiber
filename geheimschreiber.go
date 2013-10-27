@@ -843,3 +843,10 @@ func crackMessage(filename string) []*Wheel{
     return wheels
 }
 
+
+//Utility function for testing only
+func printWheels(wheels []*Wheel){
+    for _, wheel := range wheels{
+        log.Print(wheel)
+    }
+}
