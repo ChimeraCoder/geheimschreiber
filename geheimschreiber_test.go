@@ -2,9 +2,11 @@ package geheimschreiber
 
 import (
     "testing"
+    "io/ioutil"
 )
 
 const TEST_CIPHERTEXT_FILE = "test_ciphertext.txt"
+const TEST_PLAINTEXT_FILE = "test_plaintext.txt"
 
 var TEST_CIPHERTEXT_SOLVED_WHEELS = []*Wheel{NewWheel([]int{0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1}),
 	NewWheel([]int{0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0}),
@@ -62,5 +64,33 @@ func Test_Decryption(t *testing.T) {
         if !wheel.Equals(*TEST_CIPHERTEXT_SOLVED_WHEELS[i]){
             t.Error("Error decoding ciphertext: wheel %d does not match expected result")
         }
+    }
+}
+
+func Test_Encryption(t *testing.T){
+    //Determine the correct wheels
+    crackMessage(TEST_CIPHERTEXT_FILE)
+
+
+    bts, err := ioutil.ReadFile(TEST_PLAINTEXT_FILE)
+    if err != nil{
+        t.Errorf("Error reading file: %s", err.Error())
+    }
+    plaintext := string(bts)
+
+
+    bts, err = ioutil.ReadFile(TEST_CIPHERTEXT_FILE)
+    if err != nil{
+        t.Errorf("Error reading file: %s", err.Error())
+    }
+    ciphertext := string(bts)
+
+    result, err := EncryptString(plaintext)
+    if err != nil{
+        t.Errorf("Error encrypting string: %s", err.Error())
+    }
+
+    if result != ciphertext {
+        t.Errorf("Encrypted plaintext does not match target ciphertext")
     }
 }
