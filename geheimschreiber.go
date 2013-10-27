@@ -1,4 +1,4 @@
-package main
+package geheimschreiber
 
 import (
 	"bufio"
@@ -849,6 +849,3 @@ func crackMessage(filename string) []*Wheel{
     return wheels
 }
 
-func main(){
-    crackMessage("test_ciphertext.txt")
-}
