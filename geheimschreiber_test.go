@@ -69,7 +69,7 @@ func Test_Decryption(t *testing.T) {
 
 func Test_Encryption(t *testing.T){
     //Determine the correct wheels
-    crackMessage(TEST_CIPHERTEXT_FILE)
+    wheels := crackMessage(TEST_CIPHERTEXT_FILE)
 
 
     bts, err := ioutil.ReadFile(TEST_PLAINTEXT_FILE)
@@ -85,7 +85,7 @@ func Test_Encryption(t *testing.T){
     }
     ciphertext := string(bts)
 
-    result, err := EncryptString(plaintext)
+    result, err := EncryptString(wheels, plaintext)
     if err != nil{
         t.Errorf("Error encrypting string: %s", err.Error())
     }

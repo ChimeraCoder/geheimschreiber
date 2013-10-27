@@ -9,10 +9,6 @@ import (
 	"regexp"
 )
 
-var wheels []*Wheel
-
-var learnedWheels = [][]*int{}
-
 var WHEEL_SIZES = []int{47, 53, 59, 61, 64, 65, 67, 69, 71, 73}
 var LARGE_WHEEL_SIZES = []int{26996, 26996, 26996, 26996, 26996, 26996, 26996, 26996, 26996, 26996}
 
@@ -223,7 +219,7 @@ func (w Wheel) Equals(other Wheel) bool {
 //xorCurrentCharacter takes an integer representation of a character
 //and XORs it with the current bit on each of wheel b0 through b4
 //This assumes that "wheels" is a valid array of wheels of length <= 5
-func xorCurrentCharacter(input int) int {
+func xorCurrentCharacter(wheels []*Wheel, input int) int {
 	//Iterate over each of the wheels (from the left)
 	for i := 0; i < 5; i++ {
 		currentBit := wheels[i].CurrentBit()
@@ -232,7 +228,7 @@ func xorCurrentCharacter(input int) int {
 	return input
 }
 
-func EncryptString(plaintext string) (string, error) {
+func EncryptString(wheels []*Wheel, plaintext string) (string, error) {
 	result := ""
 	for _, character := range plaintext {
 
@@ -242,7 +238,7 @@ func EncryptString(plaintext string) (string, error) {
 			result += char
 			continue
 		}
-		encrypted, err := encryptCharacter(char)
+		encrypted, err := encryptCharacter(wheels, char)
 		if err != nil {
 			return "", err
 		}
@@ -252,7 +248,7 @@ func EncryptString(plaintext string) (string, error) {
 }
 
 //EncryptCharacter takes a single character and encrypts it with all ten wheels in Wheels
-func encryptCharacter(char string) (string, error) {
+func encryptCharacter(wheels []*Wheel, char string) (string, error) {
 
 	c, ok := alphabet[char]
 	if !ok {
@@ -290,7 +286,7 @@ func encryptCharacter(char string) (string, error) {
 	return encrypted_character, err
 }
 
-func DecryptString(ciphertext string) (string, error) {
+func DecryptString(wheels []*Wheel, ciphertext string) (string, error) {
 	result := ""
 	for _, character := range ciphertext {
 
@@ -299,7 +295,7 @@ func DecryptString(ciphertext string) (string, error) {
 			result += char
 			continue
 		}
-		decrypted, err := decryptCharacter(char)
+		decrypted, err := decryptCharacter(wheels, char)
 		if err != nil {
 			return "", err
 		}
@@ -308,7 +304,7 @@ func DecryptString(ciphertext string) (string, error) {
 	return result, nil
 }
 
-func decryptCharacter(char string) (string, error) {
+func decryptCharacter(wheels []*Wheel, char string) (string, error) {
 	c, ok := alphabet[char]
 	if !ok {
 		return "", errors.New("error: character not in alphabet")
@@ -370,11 +366,7 @@ func interchangeBits(c int, i uint8, j uint8) int {
 	return c
 }
 
-func OffsetWheel(wheel_index int, offset int) {
-	wheels[wheel_index].CurrentIndex = offset
-}
-
-func ResetWheels() {
+func ResetWheels(wheels []*Wheel) {
 	for _, w := range wheels {
 		w.CurrentIndex = 0
 	}
@@ -444,7 +436,7 @@ func parseCiphertext(filename string) (string, string) {
 
 //func learnFirstFiveWheels learns all spoke values from the first five wheels
 //This happens to work for the plaintext/ciphertext pair that we used for testing; it is not guaranteed to work for all texts, particularly shorter texts
-func learnFirstFiveWheels(plaintext string, ciphertext string) {
+func learnFirstFiveWheels(learnedWheels [][]*int, plaintext string, ciphertext string) {
 
 	//TODO don't use a global variable (learnedWheels) to store the results
 
@@ -498,7 +490,7 @@ func learnFirstFiveWheels(plaintext string, ciphertext string) {
 }
 
 //learnEasyTransposeBits learns all of the bits in wheels 5-8, and most (but not all) of the bits in wheel 9
-func learnEasyTransposeBits(plaintext, ciphertext string) {
+func learnEasyTransposeBits(wheels []*Wheel, learnedWheels [][]*int, plaintext, ciphertext string) {
 
 	//Iterate over the ciphertext. If the ciphercharacter is one of T,3,4,5,E,K,Q,6,X,V,
 	//we XOR the plainInt with the current state of the XOR wheels (which is known)
@@ -523,7 +515,7 @@ func learnEasyTransposeBits(plaintext, ciphertext string) {
 		if _, present := interestingCharacters[cipherChar]; present {
 			//XOR the plainInt with the current state of the XOR wheels
 
-			xoredValue := xorCurrentCharacter(plainInt)
+			xoredValue := xorCurrentCharacter(wheels, plainInt)
 
 			sourceIndex, err := FindUniqueBitIndex(xoredValue)
 			if err != nil {
@@ -559,10 +551,10 @@ func learnEasyTransposeBits(plaintext, ciphertext string) {
 
 //learnHardTransposeBits will learn the missing transpose bits in wheel 9, assuming all of wheels 5-8 are known
 //It WILL call ResetWheels() as part of its execution, which will reset wheel state.
-func learnHardTransposeBits(plaintext, ciphertext string) error {
+func learnHardTransposeBits(wheels []*Wheel, learnedWheels [][]*int, plaintext, ciphertext string) error {
 	//Reset the wheels
 	//This is VERY IMPORTANT, or the learning will fail.
-	ResetWheels()
+	ResetWheels(wheels)
 
 	//Assume that any remaining "nil" values appear on wheel 9
 	//This lets us update the missing spoke values on wheel 9, given
@@ -591,7 +583,7 @@ func learnHardTransposeBits(plaintext, ciphertext string) error {
 		if _, ok := interestingCharacters[cipherChar]; ok {
 			if _, ok := unknownSpokeIndices[index%LARGE_WHEEL_SIZES[9]]; ok {
 				present = true
-				xoredValue := xorCurrentCharacter(plainInt)
+				xoredValue := xorCurrentCharacter(wheels, plainInt)
 				sourceIndex, err := FindUniqueBitIndex(xoredValue)
 				if err != nil {
 					panic(err)
@@ -683,6 +675,8 @@ func removePossibleWheelState(possibleSizes []map[int]struct{}, wheelIndex, impo
 //TODO rename this
 func crackMessage(filename string) []*Wheel{
 
+    var learnedWheels = [][]*int{}
+
 	//Use the LARGE wheel sizes instead of the regular wheel sizes this time
 	for i := 0; i < 10; i++ {
 		tmp_wheel := make([]*int, LARGE_WHEEL_SIZES[i])
@@ -694,7 +688,7 @@ func crackMessage(filename string) []*Wheel{
 
 	//Learn all bits of the first five wheels
 	//The results are stored in learnedWheels (global variable)
-	learnFirstFiveWheels(plaintext, ciphertext)
+	learnFirstFiveWheels(learnedWheels, plaintext, ciphertext)
 
 	POSSIBLE_SIZES := make([]map[int]struct{}, 10)
 	for i, _ := range POSSIBLE_SIZES {
@@ -767,7 +761,7 @@ func crackMessage(filename string) []*Wheel{
 	//AND they are in the correct locations
 
 	//We are ready to create Wheel structs for the first five wheels
-	wheels = make([]*Wheel, 5)
+    wheels := make([]*Wheel, 5)
 	//Create actual Wheel structs for these fully-learned wheels and append them to "wheels" (global variable)
 	for wheelIndex, lw := range learnedWheels[:5] {
 		items := make([]int, len(lw))
@@ -781,7 +775,7 @@ func crackMessage(filename string) []*Wheel{
 	//Now, we need to do the same thing, but for wheels 5-9
 
 	//Learn the transpose bits, though they will not be in the correct locations
-	learnEasyTransposeBits(plaintext, ciphertext)
+	learnEasyTransposeBits(wheels, learnedWheels, plaintext, ciphertext)
 
 	//Figure out the actual sizes for wheels 5-9, so we can set the learned bits to be in the correct locations
 	for i := 5; i < 10; i++ {
