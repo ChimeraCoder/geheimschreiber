@@ -204,17 +204,16 @@ func TickAll(ws []*Wheel) {
 }
 
 func (w Wheel) Equals(other Wheel) bool {
-    if w.MaxSize != other.MaxSize {
-        return false
-    }
-    for i, item := range w.Items{
-        if item != other.Items[i]{
-            return false
-        }
-    }
-    return true
+	if w.MaxSize != other.MaxSize {
+		return false
+	}
+	for i, item := range w.Items {
+		if item != other.Items[i] {
+			return false
+		}
+	}
+	return true
 }
-
 
 //xorCurrentCharacter takes an integer representation of a character
 //and XORs it with the current bit on each of wheel b0 through b4
@@ -672,10 +671,15 @@ func removePossibleWheelState(possibleSizes []map[int]struct{}, wheelIndex, impo
 	return possibleSizes
 }
 
-//TODO rename this
-func crackMessage(filename string) []*Wheel{
+// CrackMessage will read a file containing a series of encrypted messages (one per line)
+// and determine the wheel order and values from the messages
+// It assumes that plaintext messages begin with "UMUM4VEVE35"
+// and end with "35"
+// It will fail if there are not enough messages to determine wheel order fully
+func crackMessage(filename string) []*Wheel {
+	//TODO rename this
 
-    var learnedWheels = [][]*int{}
+	var learnedWheels = [][]*int{}
 
 	//Use the LARGE wheel sizes instead of the regular wheel sizes this time
 	for i := 0; i < 10; i++ {
@@ -728,6 +732,7 @@ func crackMessage(filename string) []*Wheel{
 
 	//At this point, all of the first five wheels should be known
 	//This is not always the case, but it will be the case for the current input
+	//TODO account for the case in which the ciphertext is not long enough to learn all of the first five wheels
 
 	//Now, we know the bits of wheels 0-4, but they are in the wrong locations
 	//Set those bits to the correct locations
@@ -761,7 +766,7 @@ func crackMessage(filename string) []*Wheel{
 	//AND they are in the correct locations
 
 	//We are ready to create Wheel structs for the first five wheels
-    wheels := make([]*Wheel, 5)
+	wheels := make([]*Wheel, 5)
 	//Create actual Wheel structs for these fully-learned wheels and append them to "wheels" (global variable)
 	for wheelIndex, lw := range learnedWheels[:5] {
 		items := make([]int, len(lw))
@@ -839,14 +844,13 @@ func crackMessage(filename string) []*Wheel{
 		wheels = append(wheels, wheel)
 	}
 
-    //TODO this is a global variable; it should eventually not be
-    return wheels
+	//TODO this is a global variable; it should eventually not be
+	return wheels
 }
 
-
 //Utility function for testing only
-func printWheels(wheels []*Wheel){
-    for _, wheel := range wheels{
-        log.Print(wheel)
-    }
+func printWheels(wheels []*Wheel) {
+	for _, wheel := range wheels {
+		log.Print(wheel)
+	}
 }
