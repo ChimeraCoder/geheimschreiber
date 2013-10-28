@@ -4,7 +4,7 @@ Geheimschreiber
 *June, 1940.*
 
 
-*The Allies have discovered that the Germans are using a new machine known as the [geheimschreiber](https://en.wikipedia.org/wiki/Geheimschreiber), or "secret writer". Similar to its cousin, the [Enigma machine](https://en.wikipedia.org/wiki/Enigma_machine), the Geheimschreiber uses a series of wheels of varying length to encrypt messages by alphabetic substitution. The Germans change the wheel order on a regular basis (perhaps daily), making the messages more difficult to decipher.*
+*The Allies have discovered that the Germans are using a new machine known as the [Geheimschreiber](https://en.wikipedia.org/wiki/Geheimschreiber), or "secret writer". Similar to its cousin, the [Enigma machine](https://en.wikipedia.org/wiki/Enigma_machine), the Geheimschreiber uses a series of wheels of varying length to encrypt messages by alphabetic substitution. The Germans change the wheel order on a regular basis (perhaps daily), making the messages more difficult to decipher.*
 
 
 *Nevertheless, we have been able to identify several flaws with this new encryption scheme which enables us to decipher the Germans' messages with ease. For convenience, we have built a computational component, or "library" to automate this decryption. Below you will find the manual for its use.*
