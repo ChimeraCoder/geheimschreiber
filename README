@@ -28,6 +28,8 @@ First, determine the order of the wheels and the values of the "spokes" on each 
     wheels := crackMessage("daily_messages-1941-06-30.txt")
 ````
 
+If this fails, your team has not yet intercepted enough messages from the Germans yet today. Be patient! 
+
 Now that you have the wheels, simply decrypt the ciphertext:
 
 ````go
@@ -35,7 +37,15 @@ Now that you have the wheels, simply decrypt the ciphertext:
 ````
 
 
-If this fails, your team has not yet intercepted enough messages from the Germans yet today. Be patient! 
+Encryption
+----------------
+
+Now that you know the wheels that were used to encrypt the message, you can send decoy messages that look like they came from the Germans.
+
+
+````go
+result, err := EncryptString(wheels, "daily_messages_tampered-1041-06-30.txt")
+````
 
 
 Disclaimer
