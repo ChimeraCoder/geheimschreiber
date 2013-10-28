@@ -2,6 +2,7 @@ package geheimschreiber
 
 import (
 	"io/ioutil"
+	"log"
 	"testing"
 )
 
@@ -52,7 +53,7 @@ func Test_WheelsEqual(t *testing.T) {
 
 }
 
-func Test_Decryption(t *testing.T) {
+func Test_CrackWheels(t *testing.T) {
 
 	wheels := crackMessage(TEST_CIPHERTEXT_FILE)
 
@@ -65,7 +66,37 @@ func Test_Decryption(t *testing.T) {
 	}
 }
 
+func Test_Decryption(t *testing.T) {
+
+	ResetWheels(TEST_CIPHERTEXT_SOLVED_WHEELS)
+
+	bts, err := ioutil.ReadFile(TEST_PLAINTEXT_FILE)
+	if err != nil {
+		t.Errorf("Error reading file: %s", err.Error())
+	}
+	plaintext := string(bts)
+
+	bts, err = ioutil.ReadFile(TEST_CIPHERTEXT_FILE)
+	if err != nil {
+		t.Errorf("Error reading file: %s", err.Error())
+	}
+	ciphertext := string(bts)
+
+	result, err := DecryptString(TEST_CIPHERTEXT_SOLVED_WHEELS, ciphertext)
+	if err != nil {
+		t.Errorf("Error occurred while decrypting: %s", err.Error())
+	}
+
+	if result != plaintext {
+		t.Errorf("Decrypted message does not match known plaintext")
+	}
+
+}
+
 func Test_Encryption(t *testing.T) {
+
+	ResetWheels(TEST_CIPHERTEXT_SOLVED_WHEELS)
+
 	bts, err := ioutil.ReadFile(TEST_PLAINTEXT_FILE)
 	if err != nil {
 		t.Errorf("Error reading file: %s", err.Error())
@@ -91,6 +122,8 @@ func Test_Encryption(t *testing.T) {
 				break
 			}
 		}
+		log.Print(ciphertext[:20])
+		log.Print(result[:20])
 		t.Errorf("Encrypted plaintext (length %d) does not match target ciphertext (length %d) - first error at char %d ", len(result), len(ciphertext), diff)
 	}
 }
