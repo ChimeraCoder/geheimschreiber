@@ -44,7 +44,7 @@ Now that you know the wheels that were used to encrypt the message, you can send
 
 
 ````go
-result, err := EncryptString(wheels, "daily_messages_tampered-1041-06-30.txt")
+result, err := EncryptString(wheels, "daily_messages_tampered-1941-06-30.txt")
 ````
 
 
