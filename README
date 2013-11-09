@@ -92,8 +92,8 @@ For the transpose bits, consider cipherints that have four 0s and one 1 (or the 
 
 For example, if our transpose step permutes 01000 into 00100, then we learn the 1:
 
-*wasn't moved from the 1st bit to the 0th bit, so wheel 6 must be 0
-*was moved from the 1st bit to the 2nd bit, so wheel 7 must be 1
+* wasn't moved from the 1st bit to the 0th bit, so wheel 6 must be 0
+* was moved from the 1st bit to the 2nd bit, so wheel 7 must be 1
 * wasn't moved from the 2nd bit to the 3rd bit, so wheel 8 must be 0
 
 We learn nothing about wheels 5 and 9.
