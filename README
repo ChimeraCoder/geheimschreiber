@@ -1,4 +1,4 @@
-Geheimschreiber
+﻿Geheimschreiber
 ====================
 
 *Bletchley Park*
@@ -52,6 +52,53 @@ Now that you know the wheels that were used to encrypt the message, you can send
 result, err := EncryptString(wheels, "daily_messages_tampered-1941-06-30.txt")
 ````
 
+============
+
+The Encryption
+----------------
+
+The Geheimschreiber does three things, in order, to protect your precious, precious message.
+
+1. Use a fixed mapping to convert each character in the plaintext into a 5-bit integer, 0-31.
+2. XOR that integer with the bits on the current spokes of the first five wheels (the 'xor wheels').
+3. Permute the five bits in a particular way based on the bits on the current spokes of the second five wheels (the 'transpose wheels').
+4. Map this integer back to a character.
+5. Spit out the output.
+
+In particular, for the permutation step (let the MSB be b0, ... LSB be b4):
+
+1. If wheel 5 is 1, swap b0 and b4.
+2. If wheel 6 is 1, swap b0 and b1.
+3. If wheel 7 is 1, swap b1 and b2.
+4. If wheel 8 is 1, swap b2 and b3.
+5. If wheel 9 is 1, swap b3 and b4.
+
+Notice that this is NOT a uniform random selection from all the possible permutations. For example, b3 can *never* end up as b0 or b1. That'll be important later.
+
+The Attack
+------------
+
+The character-to-integer mapping in step #1 is constant and known, so it's not particularly interesting. We'll stop talking about "plainchars" (plaintext characters) and cipherchars and instead only work with the plainints and cipherints.
+
+Also remember that we know some of the plaintext: lines begin with 'UMUM4VEVE35' and end with '35'. We're going to figure out the XOR wheels first, and then the transpose wheels, by looking at cipherints that isolate their effects.
+
+First, for the XOR wheels, consider cipherints 00000 and 11111. We don't care about the transpose step! All the bits are the same! Each time we see those cipherints, we learn the bit of the current spoke on each of the five XOR wheels; it's just (plainbit XOR cipherbit) for each wheel.
+
+We go through the set of encrypted messages, ticking each wheel as we go, and record any learned bits on XOR wheels. We then infer wheel sizes by exclusion; if either another wheel is determined to be size m, or two known bits k and j, k mod m = j mod m, differ, then the wheel can't be size m.
+
+Finally, overlay all the bits that are on the same spoke (equivalent mod m) for each wheel, and check you've learned every XOR bit.
+
+For the transpose bits, consider cipherints that have four 0s and one 1 (or the opposite). By watching where the unique bit starts and ends we can infer some of the transpose bits.
+
+For example, if our transpose step permutes 01000 into 00100, then we learn the 1:
+
+*wasn't moved from the 1st bit to the 0th bit, so wheel 6 must be 0
+*was moved from the 1st bit to the 2nd bit, so wheel 7 must be 1
+* wasn't moved from the 2nd bit to the 3rd bit, so wheel 8 must be 0
+
+We learn nothing about wheels 5 and 9.
+
+Like with the XOR bits, we iterate across the encrypted message set, remember the values and location of bits we learn, infer wheel sizes by exclusion, and then overlay known bits back into a single m-sized wheel. Done! (Or not done, if we didn't get enough messages to fully infer the wheels.)
 
 Disclaimer
 ================
